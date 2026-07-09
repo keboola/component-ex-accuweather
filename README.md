@@ -59,9 +59,10 @@ Config-level (root)
 Row-level (per location)
 -------
 - `location_type` — `city` (default), `postal_code`, `geoposition`, or `location_key`.
-- `location_query` — free-text query (for `city`/`postal_code`); aided by the `search_locations`
-  sync action.
-- `country_code` — optional ISO country code to disambiguate city/postal search.
+- `city_query` — city name to search (`city` mode).
+- `postal_query` — postal/ZIP code to look up (`postal_code` mode; `country_code` required).
+- `location_search` — free-text term for the `search_locations` sync action (`location_key` mode).
+- `country_code` — ISO country code to disambiguate city/postal search; required for postal lookup.
 - `latitude` / `longitude` — for `geoposition`.
 - `location_key` — a directly-supplied AccuWeather key (skips resolution).
 - `datasets` — multi-select of `current_conditions`, `daily_forecast`, `hourly_forecast`.
