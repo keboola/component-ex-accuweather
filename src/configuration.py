@@ -61,7 +61,7 @@ class Configuration(BaseModel):
             super().__init__(**data)
         except ValidationError as e:
             msgs = [f"{'.'.join(str(p) for p in err['loc'])}: {err['msg']}" for err in e.errors()]
-            raise UserException(f"Configuration validation error: {', '.join(msgs)}")
+            raise UserException(f"Configuration validation error: {', '.join(msgs)}") from e
 
     def validate_location(self) -> None:
         """Validate the row-level location cross-field requirements.
@@ -79,7 +79,8 @@ class Configuration(BaseModel):
             raise UserException("latitude and longitude are required for geoposition.")
         if lt == LocationType.location_key and not self.location_key:
             raise UserException("location_key is required when location_type is 'location_key'.")
-        return self
+        if not self.datasets:
+            raise UserException("Select at least one dataset to extract for this location.")
 
     @property
     def metric(self) -> bool:

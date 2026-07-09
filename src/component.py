@@ -2,13 +2,14 @@ import csv
 import hashlib
 import logging
 from collections.abc import Callable
+from typing import Any
 
 from keboola.component.base import ComponentBase, sync_action
 from keboola.component.dao import BaseType, ColumnDefinition
 from keboola.component.exceptions import UserException
 from keboola.component.sync_actions import SelectElement
 
-from client import AccuWeatherClient, AuthError, LocationNotFoundError, RateLimitError
+from client import AccuWeatherApiError, AccuWeatherClient
 from configuration import Configuration, Dataset, LocationType
 from parsers import (
     CURRENT_COLUMNS,
@@ -110,6 +111,7 @@ class Component(ComponentBase):
     def _resolve_location_key(self) -> str:
         cfg = self._config
         if cfg.location_type == LocationType.location_key:
+            assert cfg.location_key is not None  # guaranteed by validate_location()
             return cfg.location_key
 
         state = self.get_state_file() or {}
@@ -123,11 +125,15 @@ class Component(ComponentBase):
 
     def _search_location_key(self) -> str:
         cfg = self._config
+        # validate_location() (run() entrypoint) guarantees the fields each branch needs.
         if cfg.location_type == LocationType.city:
+            assert cfg.location_query is not None
             results = self._client.search_cities(cfg.location_query, cfg.country_code)
         elif cfg.location_type == LocationType.postal_code:
+            assert cfg.location_query is not None
             results = self._client.search_postal_codes(cfg.location_query, cfg.country_code)
         elif cfg.location_type == LocationType.geoposition:
+            assert cfg.latitude is not None and cfg.longitude is not None
             geo = self._client.search_geoposition(cfg.latitude, cfg.longitude)
             results = [geo] if geo else []
         else:  # pragma: no cover - guarded above
@@ -138,20 +144,30 @@ class Component(ComponentBase):
 
     # --- dataset extraction --------------------------------------------------
     def _extract_current_conditions(self, key: str) -> None:
-        payload = self._client.get_current_conditions(key, details=self._config.include_details)
+        payload = self._client.get_current_conditions(
+            key, details=self._config.include_details, language=self._config.language
+        )
         rows = flatten_current_conditions(key, payload)
         self._write_table(TABLE_CURRENT, CURRENT_COLUMNS, CURRENT_PK, rows)
 
     def _extract_daily_forecast(self, key: str) -> None:
         payload = self._client.get_daily_forecast(
-            key, days=self._config.daily_range, metric=self._config.metric, details=self._config.include_details
+            key,
+            days=self._config.daily_range,
+            metric=self._config.metric,
+            details=self._config.include_details,
+            language=self._config.language,
         )
         rows = flatten_daily_forecast(key, payload)
         self._write_table(TABLE_DAILY, DAILY_COLUMNS, DAILY_PK, rows)
 
     def _extract_hourly_forecast(self, key: str) -> None:
         payload = self._client.get_hourly_forecast(
-            key, hours=self._config.hourly_range, metric=self._config.metric, details=self._config.include_details
+            key,
+            hours=self._config.hourly_range,
+            metric=self._config.metric,
+            details=self._config.include_details,
+            language=self._config.language,
         )
         rows = flatten_hourly_forecast(key, payload)
         self._write_table(TABLE_HOURLY, HOURLY_COLUMNS, HOURLY_PK, rows)
@@ -161,25 +177,33 @@ class Component(ComponentBase):
     def test_connection(self) -> None:
         try:
             self._client.search_cities("London")
-        except (AuthError, RateLimitError, LocationNotFoundError) as exc:
-            raise UserException(f"Connection test failed: {exc}")
+        except (AccuWeatherApiError, ValueError) as exc:
+            # AccuWeatherApiError covers network faults, auth/rate-limit/not-found and any
+            # unmapped HTTP status; ValueError covers a malformed JSON body from the API.
+            raise UserException(f"Connection test failed: {exc}") from exc
 
     @sync_action("search_locations")
     def search_locations(self) -> list[SelectElement]:
         q = self._config.location_query
         if not q:
             raise UserException("Enter a location query to search.")
-        matches = self._client.search_cities(q, self._config.country_code)
+        try:
+            matches = self._client.search_cities(q, self._config.country_code)
+        except (AccuWeatherApiError, ValueError) as exc:
+            raise UserException(f"Location search failed: {exc}") from exc
         elements = []
         for m in matches:
+            key = m.get("Key")
+            if not key:
+                continue
             area = (m.get("AdministrativeArea") or {}).get("LocalizedName", "")
             country = (m.get("Country") or {}).get("LocalizedName", "")
             label = ", ".join(p for p in (m.get("LocalizedName"), area, country) if p)
-            elements.append(SelectElement(value=m["Key"], label=label))
+            elements.append(SelectElement(value=key, label=label))
         return elements
 
     # --- table writing -------------------------------------------------------
-    def _write_table(self, name: str, columns: list[str], pk: list[str], rows: list[dict]) -> None:
+    def _write_table(self, name: str, columns: list[str], pk: list[str], rows: list[dict[str, Any]]) -> None:
         schema = {
             col: ColumnDefinition(
                 data_types=_TYPE_MAP.get(col, BaseType.string)(),
@@ -205,7 +229,10 @@ class Component(ComponentBase):
 if __name__ == "__main__":
     try:
         Component().execute_action()
-    except (UserException, AuthError, LocationNotFoundError, RateLimitError) as exc:
+    except (UserException, AccuWeatherApiError) as exc:
+        # AccuWeatherApiError is the base for AuthError/LocationNotFoundError/RateLimitError
+        # and every mapped upstream failure (network fault, terminal 5xx, unmapped 4xx),
+        # so a transient upstream problem surfaces as a user error (exit 1), not exit 2.
         logging.exception(exc)
         exit(1)
     except Exception as exc:

@@ -63,7 +63,7 @@ HOURLY_COLUMNS = [
 ]
 
 
-def _dig(d: dict | None, *keys: str) -> Any:
+def _dig(d: dict[str, Any] | None, *keys: str) -> Any:
     cur: Any = d
     for k in keys:
         if not isinstance(cur, dict):
@@ -72,7 +72,7 @@ def _dig(d: dict | None, *keys: str) -> Any:
     return cur
 
 
-def flatten_current_conditions(location_key: str, payload: list[dict]) -> list[dict]:
+def flatten_current_conditions(location_key: str, payload: list[dict[str, Any]]) -> list[dict[str, Any]]:
     rows = []
     for o in payload:
         rows.append(
@@ -104,7 +104,7 @@ def flatten_current_conditions(location_key: str, payload: list[dict]) -> list[d
     return rows
 
 
-def flatten_daily_forecast(location_key: str, payload: dict) -> list[dict]:
+def flatten_daily_forecast(location_key: str, payload: dict[str, Any]) -> list[dict[str, Any]]:
     rows = []
     for d in payload.get("DailyForecasts", []):
         rows.append(
@@ -131,7 +131,7 @@ def flatten_daily_forecast(location_key: str, payload: dict) -> list[dict]:
     return rows
 
 
-def flatten_hourly_forecast(location_key: str, payload: list[dict]) -> list[dict]:
+def flatten_hourly_forecast(location_key: str, payload: list[dict[str, Any]]) -> list[dict[str, Any]]:
     rows = []
     for h in payload:
         rows.append(

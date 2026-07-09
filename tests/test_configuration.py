@@ -74,3 +74,10 @@ def test_out_of_range_daily_raises_userexception():
 def test_out_of_range_hourly_raises_userexception():
     with pytest.raises(UserException):
         Configuration(**{"#api_key": "K", "location_type": "location_key", "location_key": "1", "hourly_range": 48})
+
+
+def test_empty_datasets_rejected_by_validate_location():
+    # Empty datasets is constructible (sync actions need it) but must fail validate_location().
+    cfg = Configuration(**{"#api_key": "K", "location_type": "location_key", "location_key": "1", "datasets": []})
+    with pytest.raises(UserException):
+        cfg.validate_location()

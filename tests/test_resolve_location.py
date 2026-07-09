@@ -34,6 +34,19 @@ def test_resolves_via_city_search_on_first_run(monkeypatch):
     assert c._resolve_location_key() == "125594"
     c._client.search_cities.assert_called_once()
     c.write_state_file.assert_called_once()
+    # cached-state shape: location_key + a resolved_from fingerprint
+    written = c.write_state_file.call_args.args[0]
+    assert written["location_key"] == "125594"
+    assert written["resolved_from"] == c._resolved_from()
+
+
+def test_resolves_via_postal_code_search(monkeypatch):
+    cfg = {"#api_key": "K", "location_type": "postal_code", "location_query": "10001", "country_code": "US"}
+    c = _make_component(monkeypatch, cfg, {})
+    c._client.search_postal_codes.return_value = [{"Key": "349727"}]
+    assert c._resolve_location_key() == "349727"
+    c._client.search_postal_codes.assert_called_once_with("10001", "US")
+    c._client.search_cities.assert_not_called()
 
 
 def test_direct_location_key_skips_resolution(monkeypatch):
