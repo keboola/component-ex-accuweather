@@ -147,7 +147,7 @@ class Component(ComponentBase):
         payload = self._client.get_current_conditions(
             key, details=self._config.include_details, language=self._config.language
         )
-        rows = flatten_current_conditions(key, payload)
+        rows = flatten_current_conditions(key, payload, metric=self._config.metric)
         self._write_table(TABLE_CURRENT, CURRENT_COLUMNS, CURRENT_PK, rows)
 
     def _extract_daily_forecast(self, key: str) -> None:

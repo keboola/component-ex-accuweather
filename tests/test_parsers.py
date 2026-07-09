@@ -46,6 +46,38 @@ def test_flatten_current_conditions():
     assert set(r.keys()) == set(CURRENT_COLUMNS)
 
 
+def _current_conditions_payload():
+    return [
+        {
+            "Temperature": {"Metric": {"Value": 24.1, "Unit": "C"}, "Imperial": {"Value": 75.4, "Unit": "F"}},
+            "RealFeelTemperature": {"Metric": {"Value": 25.0, "Unit": "C"}, "Imperial": {"Value": 77.0, "Unit": "F"}},
+            "Wind": {"Speed": {"Metric": {"Value": 10.0}, "Imperial": {"Value": 6.2}}},
+            "Visibility": {"Metric": {"Value": 16.1}, "Imperial": {"Value": 10.0}},
+            "Pressure": {"Metric": {"Value": 1015.0}, "Imperial": {"Value": 29.97}},
+        }
+    ]
+
+
+def test_current_conditions_metric_selects_metric_branch():
+    r = flatten_current_conditions("1", _current_conditions_payload(), metric=True)[0]
+    assert r["temperature"] == 24.1
+    assert r["temperature_unit"] == "C"
+    assert r["realfeel_temperature"] == 25.0
+    assert r["wind_speed"] == 10.0
+    assert r["visibility"] == 16.1
+    assert r["pressure"] == 1015.0
+
+
+def test_current_conditions_imperial_selects_imperial_branch():
+    r = flatten_current_conditions("1", _current_conditions_payload(), metric=False)[0]
+    assert r["temperature"] == 75.4
+    assert r["temperature_unit"] == "F"
+    assert r["realfeel_temperature"] == 77.0
+    assert r["wind_speed"] == 6.2
+    assert r["visibility"] == 10.0
+    assert r["pressure"] == 29.97
+
+
 def test_flatten_daily_forecast():
     payload = {
         "DailyForecasts": [

@@ -72,7 +72,12 @@ def _dig(d: dict[str, Any] | None, *keys: str) -> Any:
     return cur
 
 
-def flatten_current_conditions(location_key: str, payload: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def flatten_current_conditions(
+    location_key: str, payload: list[dict[str, Any]], *, metric: bool = True
+) -> list[dict[str, Any]]:
+    # currentconditions has no metric= query param — the payload always carries both
+    # Metric and Imperial sub-objects, so honor the configured units here in the parser.
+    units = "Metric" if metric else "Imperial"
     rows = []
     for o in payload:
         rows.append(
@@ -85,18 +90,18 @@ def flatten_current_conditions(location_key: str, payload: list[dict[str, Any]])
                 "has_precipitation": o.get("HasPrecipitation"),
                 "precipitation_type": o.get("PrecipitationType"),
                 "is_day_time": o.get("IsDayTime"),
-                "temperature": _dig(o, "Temperature", "Metric", "Value"),
-                "temperature_unit": _dig(o, "Temperature", "Metric", "Unit"),
-                "realfeel_temperature": _dig(o, "RealFeelTemperature", "Metric", "Value"),
+                "temperature": _dig(o, "Temperature", units, "Value"),
+                "temperature_unit": _dig(o, "Temperature", units, "Unit"),
+                "realfeel_temperature": _dig(o, "RealFeelTemperature", units, "Value"),
                 "relative_humidity": o.get("RelativeHumidity"),
-                "wind_speed": _dig(o, "Wind", "Speed", "Metric", "Value"),
+                "wind_speed": _dig(o, "Wind", "Speed", units, "Value"),
                 "wind_direction_degrees": _dig(o, "Wind", "Direction", "Degrees"),
                 "wind_direction": _dig(o, "Wind", "Direction", "Localized"),
                 "uv_index": o.get("UVIndex"),
                 "uv_index_text": o.get("UVIndexText"),
-                "visibility": _dig(o, "Visibility", "Metric", "Value"),
+                "visibility": _dig(o, "Visibility", units, "Value"),
                 "cloud_cover": o.get("CloudCover"),
-                "pressure": _dig(o, "Pressure", "Metric", "Value"),
+                "pressure": _dig(o, "Pressure", units, "Value"),
                 "link": o.get("Link"),
                 "mobile_link": o.get("MobileLink"),
             }
