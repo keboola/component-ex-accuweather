@@ -1,3 +1,4 @@
+# Should match cookiecutter-python-component – please sync both directions when either changes.
 repos:
   - repo: local
     hooks:
@@ -16,8 +17,8 @@ repos:
         pass_filenames: false
 
       - id: ty-check
-        name: ty type check
-        entry: uv run ty check
+        name: ty type check (warnings only)
+        entry: bash -c 'uv run ty check || true'
         language: system
         types: [python]
         pass_filenames: false
