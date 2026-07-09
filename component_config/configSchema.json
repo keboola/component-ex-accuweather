@@ -1,19 +1,61 @@
 {
   "type": "object",
-  "title": "extractor configuration",
+  "title": "AccuWeather Extractor",
   "required": [
-    "print_hello"
+    "#api_key"
   ],
   "properties": {
-    "print_hello": {
-      "type": "boolean",
-      "title": "Print Hello",
-      "propertyOrder": 1
+    "#api_key": {
+      "type": "string",
+      "title": "API Key",
+      "format": "password",
+      "description": "Your AccuWeather developer API key.",
+      "propertyOrder": 10,
+      "options": {
+        "tooltip": "Create a developer account at developer.accuweather.com, add an app, and copy its API key. The key is sent as a Bearer token on every request."
+      }
     },
-    "debug": {
+    "test_connection": {
+      "type": "button",
+      "format": "test-connection",
+      "propertyOrder": 20
+    },
+    "units": {
+      "type": "string",
+      "title": "Units",
+      "enum": [
+        "metric",
+        "imperial"
+      ],
+      "default": "metric",
+      "description": "Measurement system for forecast values.",
+      "propertyOrder": 30,
+      "options": {
+        "enum_titles": [
+          "Metric",
+          "Imperial"
+        ]
+      }
+    },
+    "language": {
+      "type": "string",
+      "title": "Language",
+      "default": "en-us",
+      "description": "Language for text fields such as weather phrases.",
+      "propertyOrder": 40,
+      "options": {
+        "tooltip": "AccuWeather language tag, e.g. en-us, es, fr, de. Defaults to en-us."
+      }
+    },
+    "include_details": {
       "type": "boolean",
-      "title": "Debug",
-      "propertyOrder": 2
+      "title": "Include Details",
+      "default": true,
+      "description": "Fetch additional detail fields for each dataset.",
+      "propertyOrder": 50,
+      "options": {
+        "tooltip": "Maps to the AccuWeather details=true/false parameter. When enabled, extra detail columns are populated."
+      }
     }
   }
 }

@@ -1,1 +1,184 @@
-{}
+{
+  "type": "object",
+  "title": "Location",
+  "required": [
+    "location_type",
+    "datasets"
+  ],
+  "properties": {
+    "location_type": {
+      "type": "string",
+      "title": "Location Type",
+      "enum": [
+        "city",
+        "postal_code",
+        "geoposition",
+        "location_key"
+      ],
+      "default": "city",
+      "description": "How this location is identified.",
+      "propertyOrder": 10,
+      "options": {
+        "enum_titles": [
+          "City name",
+          "Postal code",
+          "Geo-position (latitude/longitude)",
+          "AccuWeather location key"
+        ]
+      }
+    },
+    "location_query": {
+      "type": "string",
+      "title": "Search Query",
+      "description": "City name or postal code to look up.",
+      "propertyOrder": 20,
+      "options": {
+        "tooltip": "For City use a name such as \"London\". For Postal code use a code such as \"10001\". In location-key mode this is an optional search term for the Search locations helper.",
+        "dependencies": {
+          "location_type": [
+            "city",
+            "postal_code",
+            "location_key"
+          ]
+        }
+      }
+    },
+    "country_code": {
+      "type": "string",
+      "title": "Country Code",
+      "description": "Optional ISO 3166 country code to disambiguate the search.",
+      "propertyOrder": 30,
+      "options": {
+        "tooltip": "Two-letter ISO country code, e.g. US, GB, CZ. Narrows the city or postal code search.",
+        "dependencies": {
+          "location_type": [
+            "city",
+            "postal_code",
+            "location_key"
+          ]
+        }
+      }
+    },
+    "latitude": {
+      "type": "number",
+      "title": "Latitude",
+      "description": "Latitude in decimal degrees.",
+      "propertyOrder": 40,
+      "options": {
+        "dependencies": {
+          "location_type": "geoposition"
+        }
+      }
+    },
+    "longitude": {
+      "type": "number",
+      "title": "Longitude",
+      "description": "Longitude in decimal degrees.",
+      "propertyOrder": 50,
+      "options": {
+        "dependencies": {
+          "location_type": "geoposition"
+        }
+      }
+    },
+    "location_key": {
+      "type": "string",
+      "title": "Location Key",
+      "format": "select",
+      "enum": [],
+      "description": "AccuWeather location key.",
+      "propertyOrder": 60,
+      "options": {
+        "tooltip": "Enter a known AccuWeather location key, or type a query above and click Search locations to pick one.",
+        "creatable": true,
+        "async": {
+          "label": "Search locations",
+          "action": "search_locations"
+        },
+        "dependencies": {
+          "location_type": "location_key"
+        }
+      }
+    },
+    "datasets": {
+      "type": "array",
+      "title": "Datasets",
+      "format": "select",
+      "uniqueItems": true,
+      "default": [
+        "current_conditions"
+      ],
+      "description": "Which weather datasets to pull for this location.",
+      "propertyOrder": 70,
+      "items": {
+        "type": "string",
+        "enum": [
+          "current_conditions",
+          "daily_forecast",
+          "hourly_forecast"
+        ],
+        "options": {
+          "enum_titles": [
+            "Current conditions",
+            "Daily forecast",
+            "Hourly forecast"
+          ]
+        }
+      }
+    },
+    "daily_range": {
+      "type": "integer",
+      "title": "Daily Forecast Range",
+      "enum": [
+        1,
+        5,
+        10,
+        15
+      ],
+      "default": 5,
+      "description": "Number of forecast days to request.",
+      "propertyOrder": 80,
+      "options": {
+        "enum_titles": [
+          "1 day",
+          "5 days",
+          "10 days",
+          "15 days"
+        ],
+        "dependencies": {
+          "datasets": [
+            "daily_forecast"
+          ]
+        }
+      }
+    },
+    "hourly_range": {
+      "type": "integer",
+      "title": "Hourly Forecast Range",
+      "enum": [
+        1,
+        12,
+        24,
+        72,
+        120
+      ],
+      "default": 12,
+      "description": "Number of forecast hours to request.",
+      "propertyOrder": 90,
+      "options": {
+        "enum_titles": [
+          "1 hour",
+          "12 hours",
+          "24 hours",
+          "72 hours",
+          "120 hours"
+        ],
+        "dependencies": {
+          "datasets": [
+            "hourly_forecast"
+          ]
+        }
+      }
+    }
+  }
+}
