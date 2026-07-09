@@ -103,8 +103,8 @@ class Component(ComponentBase):
     def _resolved_from(self) -> str:
         cfg = self._config
         raw = (
-            f"{cfg.location_type}|{cfg.location_query}|{cfg.country_code}"
-            f"|{cfg.latitude}|{cfg.longitude}|{cfg.location_key}"
+            f"{cfg.location_type}|{cfg.city_query}|{cfg.postal_query}|{cfg.location_search}"
+            f"|{cfg.country_code}|{cfg.latitude}|{cfg.longitude}|{cfg.location_key}"
         )
         return hashlib.sha256(raw.encode()).hexdigest()
 
@@ -127,11 +127,11 @@ class Component(ComponentBase):
         cfg = self._config
         # validate_location() (run() entrypoint) guarantees the fields each branch needs.
         if cfg.location_type == LocationType.city:
-            assert cfg.location_query is not None
-            results = self._client.search_cities(cfg.location_query, cfg.country_code)
+            assert cfg.city_query is not None
+            results = self._client.search_cities(cfg.city_query, cfg.country_code)
         elif cfg.location_type == LocationType.postal_code:
-            assert cfg.location_query is not None
-            results = self._client.search_postal_codes(cfg.location_query, cfg.country_code)
+            assert cfg.postal_query is not None
+            results = self._client.search_postal_codes(cfg.postal_query, cfg.country_code)
         elif cfg.location_type == LocationType.geoposition:
             assert cfg.latitude is not None and cfg.longitude is not None
             geo = self._client.search_geoposition(cfg.latitude, cfg.longitude)
@@ -184,7 +184,9 @@ class Component(ComponentBase):
 
     @sync_action("search_locations")
     def search_locations(self) -> list[SelectElement]:
-        q = self._config.location_query
+        # Read whichever query field is present in the active mode (city_query /
+        # postal_query / location_search); the picker itself only renders in location_key mode.
+        q = self._config.search_query
         if not q:
             raise UserException("Enter a location query to search.")
         try:

@@ -5,7 +5,7 @@ from configuration import Configuration, Dataset, Units
 
 
 def test_minimal_city_config():
-    cfg = Configuration(**{"#api_key": "KEY", "location_type": "city", "location_query": "Prague"})
+    cfg = Configuration(**{"#api_key": "KEY", "location_type": "city", "city_query": "Prague"})
     assert cfg.api_key == "KEY"
     assert cfg.units == Units.metric
     assert cfg.datasets == [Dataset.current_conditions]
@@ -14,7 +14,7 @@ def test_minimal_city_config():
 
 def test_missing_api_key_raises_userexception():
     with pytest.raises(UserException):
-        Configuration(**{"location_type": "city", "location_query": "Prague"})
+        Configuration(**{"location_type": "city", "city_query": "Prague"})
 
 
 def test_geoposition_requires_lat_lon():
@@ -37,10 +37,29 @@ def test_extra_keys_ignored():
     assert cfg.location_key == "125594"
 
 
-def test_city_requires_location_query():
+def test_city_requires_city_query():
     cfg = Configuration(**{"#api_key": "KEY", "location_type": "city"})
     with pytest.raises(UserException):
         cfg.validate_location()
+
+
+def test_postal_requires_postal_query_and_country_code():
+    # postal_query missing -> fails
+    cfg = Configuration(**{"#api_key": "KEY", "location_type": "postal_code", "country_code": "US"})
+    with pytest.raises(UserException):
+        cfg.validate_location()
+    # postal_query present but country_code missing -> still fails (required for postal lookup)
+    cfg = Configuration(**{"#api_key": "KEY", "location_type": "postal_code", "postal_query": "10001"})
+    with pytest.raises(UserException):
+        cfg.validate_location()
+
+
+def test_postal_ok_with_postal_query_and_country_code():
+    cfg = Configuration(
+        **{"#api_key": "KEY", "location_type": "postal_code", "postal_query": "10001", "country_code": "US"}
+    )
+    cfg.validate_location()  # must not raise
+    assert cfg.search_query == "10001"
 
 
 def test_metric_property():

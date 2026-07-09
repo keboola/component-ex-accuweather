@@ -19,7 +19,7 @@ def _make_component(monkeypatch, cfg_kwargs, state):
 
 
 def test_uses_cached_key_when_resolved_from_matches(monkeypatch):
-    cfg = {"#api_key": "K", "location_type": "city", "location_query": "Prague"}
+    cfg = {"#api_key": "K", "location_type": "city", "city_query": "Prague"}
     c = _make_component(monkeypatch, cfg, {})
     c._state = {"location_key": "125594", "resolved_from": c._resolved_from()}
     monkeypatch.setattr(c, "get_state_file", lambda: c._state)
@@ -28,11 +28,13 @@ def test_uses_cached_key_when_resolved_from_matches(monkeypatch):
 
 
 def test_resolves_via_city_search_on_first_run(monkeypatch):
-    cfg = {"#api_key": "K", "location_type": "city", "location_query": "Prague"}
+    cfg = {"#api_key": "K", "location_type": "city", "city_query": "Prague", "country_code": "CZ"}
     c = _make_component(monkeypatch, cfg, {})
     c._client.search_cities.return_value = [{"Key": "125594"}]
     assert c._resolve_location_key() == "125594"
-    c._client.search_cities.assert_called_once()
+    # city_query (not any other query field) drives the client call
+    c._client.search_cities.assert_called_once_with("Prague", "CZ")
+    c._client.search_postal_codes.assert_not_called()
     c.write_state_file.assert_called_once()
     # cached-state shape: location_key + a resolved_from fingerprint
     written = c.write_state_file.call_args.args[0]
@@ -41,10 +43,11 @@ def test_resolves_via_city_search_on_first_run(monkeypatch):
 
 
 def test_resolves_via_postal_code_search(monkeypatch):
-    cfg = {"#api_key": "K", "location_type": "postal_code", "location_query": "10001", "country_code": "US"}
+    cfg = {"#api_key": "K", "location_type": "postal_code", "postal_query": "10001", "country_code": "US"}
     c = _make_component(monkeypatch, cfg, {})
     c._client.search_postal_codes.return_value = [{"Key": "349727"}]
     assert c._resolve_location_key() == "349727"
+    # postal_query (not any other query field) drives the client call
     c._client.search_postal_codes.assert_called_once_with("10001", "US")
     c._client.search_cities.assert_not_called()
 
@@ -57,7 +60,7 @@ def test_direct_location_key_skips_resolution(monkeypatch):
 
 
 def test_empty_city_result_raises_userexception(monkeypatch):
-    cfg = {"#api_key": "K", "location_type": "city", "location_query": "Nowhere"}
+    cfg = {"#api_key": "K", "location_type": "city", "city_query": "Nowhere"}
     c = _make_component(monkeypatch, cfg, {})
     c._client.search_cities.return_value = []
     with pytest.raises(UserException):
@@ -65,7 +68,7 @@ def test_empty_city_result_raises_userexception(monkeypatch):
 
 
 def test_stale_cache_triggers_reresolution(monkeypatch):
-    cfg = {"#api_key": "K", "location_type": "city", "location_query": "Prague"}
+    cfg = {"#api_key": "K", "location_type": "city", "city_query": "Prague"}
     c = _make_component(monkeypatch, cfg, {})
     c._state = {"location_key": "OLD", "resolved_from": "different-hash"}
     monkeypatch.setattr(c, "get_state_file", lambda: c._state)

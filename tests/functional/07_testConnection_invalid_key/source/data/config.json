@@ -3,6 +3,6 @@
   "parameters": {
     "#api_key": "INVALID_KEY_0000000000000000000000",
     "location_type": "city",
-    "location_query": "Prague"
+    "city_query": "Prague"
   }
 }

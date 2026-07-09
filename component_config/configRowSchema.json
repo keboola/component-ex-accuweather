@@ -27,29 +27,49 @@
         ]
       }
     },
-    "location_query": {
+    "city_query": {
       "type": "string",
-      "title": "Search Query",
-      "description": "City name or postal code to look up.",
+      "title": "City name",
+      "description": "City name to search.",
       "propertyOrder": 20,
       "options": {
-        "tooltip": "For City use a name such as \"London\". For Postal code use a code such as \"10001\". In location-key mode this is an optional search term for the Search locations helper.",
+        "tooltip": "City name to search, e.g. Prague. Add a Country code to disambiguate.",
         "dependencies": {
-          "location_type": [
-            "city",
-            "postal_code",
-            "location_key"
-          ]
+          "location_type": "city"
+        }
+      }
+    },
+    "postal_query": {
+      "type": "string",
+      "title": "Postal code",
+      "description": "Postal/ZIP code to look up.",
+      "propertyOrder": 20,
+      "options": {
+        "tooltip": "Postal/ZIP code, e.g. 11000. A Country code is required for postal lookup.",
+        "dependencies": {
+          "location_type": "postal_code"
+        }
+      }
+    },
+    "location_search": {
+      "type": "string",
+      "title": "Location search",
+      "description": "Search term used by the Search locations helper.",
+      "propertyOrder": 20,
+      "options": {
+        "tooltip": "Search by city or postal code to find the key, or paste a known key below.",
+        "dependencies": {
+          "location_type": "location_key"
         }
       }
     },
     "country_code": {
       "type": "string",
       "title": "Country Code",
-      "description": "Optional ISO 3166 country code to disambiguate the search.",
+      "description": "ISO 3166 country code to disambiguate the search.",
       "propertyOrder": 30,
       "options": {
-        "tooltip": "Two-letter ISO country code, e.g. US, GB, CZ. Narrows the city or postal code search.",
+        "tooltip": "Two-letter ISO country code, e.g. US, GB, CZ. Narrows the city or postal code search. Required for postal code lookup.",
         "dependencies": {
           "location_type": [
             "city",
@@ -89,7 +109,7 @@
       "description": "AccuWeather location key.",
       "propertyOrder": 60,
       "options": {
-        "tooltip": "Enter a known AccuWeather location key, or type a query above and click Search locations to pick one.",
+        "tooltip": "Enter a known AccuWeather location key, or type a Location search above and click Search locations to pick one.",
         "creatable": true,
         "async": {
           "label": "Search locations",

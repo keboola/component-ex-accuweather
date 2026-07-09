@@ -3,7 +3,7 @@
   "parameters": {
     "#api_key": "DUMMY_KEY",
     "location_type": "city",
-    "location_query": "Zzxqwmvbnq123nowhere",
+    "city_query": "Zzxqwmvbnq123nowhere",
     "datasets": [
       "current_conditions"
     ]

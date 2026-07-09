@@ -10,7 +10,7 @@
         "language": "en-us",
         "include_details": true,
         "location_type": "city",
-        "location_query": "Prague",
+        "city_query": "Prague",
         "country_code": "CZ",
         "datasets": ["current_conditions", "daily_forecast", "hourly_forecast"],
         "daily_range": 5,
@@ -41,7 +41,7 @@
       "parameters": {
         "#api_key": "DUMMY_KEY",
         "location_type": "city",
-        "location_query": "Prague"
+        "city_query": "Prague"
       }
     }
   },
@@ -53,7 +53,7 @@
       "parameters": {
         "#api_key": "DUMMY_KEY",
         "location_type": "city",
-        "location_query": "Prague",
+        "city_query": "Prague",
         "country_code": "CZ"
       }
     }
@@ -66,7 +66,7 @@
       "parameters": {
         "#api_key": "DUMMY_KEY",
         "location_type": "city",
-        "location_query": "Zzxqwmvbnq123nowhere",
+        "city_query": "Zzxqwmvbnq123nowhere",
         "datasets": ["current_conditions"]
       }
     }

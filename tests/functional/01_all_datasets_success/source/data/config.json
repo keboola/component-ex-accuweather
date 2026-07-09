@@ -6,7 +6,7 @@
     "language": "en-us",
     "include_details": true,
     "location_type": "city",
-    "location_query": "Prague",
+    "city_query": "Prague",
     "country_code": "CZ",
     "datasets": [
       "current_conditions",
