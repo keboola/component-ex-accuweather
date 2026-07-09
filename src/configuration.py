@@ -1,26 +1,64 @@
-import logging
+from enum import StrEnum
 
 from keboola.component.exceptions import UserException
-from pydantic import BaseModel, Field, ValidationError, field_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
+
+
+class Units(StrEnum):
+    metric = "metric"
+    imperial = "imperial"
+
+
+class LocationType(StrEnum):
+    city = "city"
+    postal_code = "postal_code"
+    geoposition = "geoposition"
+    location_key = "location_key"
+
+
+class Dataset(StrEnum):
+    current_conditions = "current_conditions"
+    daily_forecast = "daily_forecast"
+    hourly_forecast = "hourly_forecast"
 
 
 class Configuration(BaseModel):
-    print_hello: bool
-    api_token: str = Field(alias="#api_token")
-    debug: bool = False
+    model_config = ConfigDict(extra="ignore", populate_by_name=True)
+
+    api_key: str = Field(alias="#api_key")
+    units: Units = Units.metric
+    language: str = "en-us"
+    include_details: bool = True
+
+    location_type: LocationType = LocationType.city
+    location_query: str | None = None
+    country_code: str | None = None
+    latitude: float | None = None
+    longitude: float | None = None
+    location_key: str | None = None
+
+    datasets: list[Dataset] = Field(default_factory=lambda: [Dataset.current_conditions])
+    daily_range: int = 5
+    hourly_range: int = 12
 
     def __init__(self, **data):
         try:
             super().__init__(**data)
         except ValidationError as e:
-            error_messages = [f"{err['loc'][0]}: {err['msg']}" for err in e.errors()]
-            raise UserException(f"Validation Error: {', '.join(error_messages)}")
+            msgs = [f"{'.'.join(str(p) for p in err['loc'])}: {err['msg']}" for err in e.errors()]
+            raise UserException(f"Configuration validation error: {', '.join(msgs)}")
 
-        if self.debug:
-            logging.debug("Component will run in Debug mode")
+    @model_validator(mode="after")
+    def _check_location_fields(self):
+        lt = self.location_type
+        if lt in (LocationType.city, LocationType.postal_code) and not self.location_query:
+            raise UserException(f"location_query is required when location_type is '{lt}'.")
+        if lt == LocationType.geoposition and (self.latitude is None or self.longitude is None):
+            raise UserException("latitude and longitude are required for geoposition.")
+        if lt == LocationType.location_key and not self.location_key:
+            raise UserException("location_key is required when location_type is 'location_key'.")
+        return self
 
-    @field_validator("api_token")
-    def token_must_be_uppercase(cls, v):
-        if not v.isupper():
-            raise UserException("API token must be uppercase")
-        return v
+    @property
+    def metric(self) -> bool:
+        return self.units == Units.metric
