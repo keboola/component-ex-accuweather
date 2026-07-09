@@ -46,3 +46,27 @@ def test_metric_property():
         **{"#api_key": "K", "location_type": "location_key", "location_key": "1", "units": "imperial"}
     )
     assert imperial_cfg.metric is False
+
+
+def test_valid_ranges_accepted():
+    cfg = Configuration(
+        **{
+            "#api_key": "K",
+            "location_type": "location_key",
+            "location_key": "1",
+            "daily_range": 10,
+            "hourly_range": 72,
+        }
+    )
+    assert cfg.daily_range == 10
+    assert cfg.hourly_range == 72
+
+
+def test_out_of_range_daily_raises_userexception():
+    with pytest.raises(UserException):
+        Configuration(**{"#api_key": "K", "location_type": "location_key", "location_key": "1", "daily_range": 7})
+
+
+def test_out_of_range_hourly_raises_userexception():
+    with pytest.raises(UserException):
+        Configuration(**{"#api_key": "K", "location_type": "location_key", "location_key": "1", "hourly_range": 48})

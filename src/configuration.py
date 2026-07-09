@@ -1,4 +1,4 @@
-from enum import StrEnum
+from enum import IntEnum, StrEnum
 
 from keboola.component.exceptions import UserException
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
@@ -7,6 +7,21 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_valida
 class Units(StrEnum):
     metric = "metric"
     imperial = "imperial"
+
+
+class DailyRange(IntEnum):
+    one = 1
+    five = 5
+    ten = 10
+    fifteen = 15
+
+
+class HourlyRange(IntEnum):
+    one = 1
+    twelve = 12
+    twenty_four = 24
+    seventy_two = 72
+    one_twenty = 120
 
 
 class LocationType(StrEnum):
@@ -38,8 +53,8 @@ class Configuration(BaseModel):
     location_key: str | None = None
 
     datasets: list[Dataset] = Field(default_factory=lambda: [Dataset.current_conditions])
-    daily_range: int = 5
-    hourly_range: int = 12
+    daily_range: DailyRange = DailyRange.five
+    hourly_range: HourlyRange = HourlyRange.twelve
 
     def __init__(self, **data):
         try:
