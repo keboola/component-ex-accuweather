@@ -18,8 +18,11 @@ def test_missing_api_key_raises_userexception():
 
 
 def test_geoposition_requires_lat_lon():
+    # Location cross-field checks run via validate_location() (in run()), not at construction,
+    # so sync actions can dispatch without a resolved location.
+    cfg = Configuration(**{"#api_key": "KEY", "location_type": "geoposition"})
     with pytest.raises(UserException):
-        Configuration(**{"#api_key": "KEY", "location_type": "geoposition"})
+        cfg.validate_location()
 
 
 def test_geoposition_ok_with_lat_lon():
@@ -35,8 +38,9 @@ def test_extra_keys_ignored():
 
 
 def test_city_requires_location_query():
+    cfg = Configuration(**{"#api_key": "KEY", "location_type": "city"})
     with pytest.raises(UserException):
-        Configuration(**{"#api_key": "KEY", "location_type": "city"})
+        cfg.validate_location()
 
 
 def test_metric_property():

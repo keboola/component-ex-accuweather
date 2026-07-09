@@ -2,7 +2,7 @@
   "action": "search_locations",
   "parameters": {
     "#api_key": "DUMMY_KEY",
-    "location_type": "city",
+    "location_type": "location_key",
     "location_query": "Prague",
     "country_code": "CZ"
   }

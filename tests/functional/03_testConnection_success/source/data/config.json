@@ -1,8 +1,6 @@
 {
   "action": "testConnection",
   "parameters": {
-    "#api_key": "DUMMY_KEY",
-    "location_type": "city",
-    "location_query": "Prague"
+    "#api_key": "DUMMY_KEY"
   }
 }
