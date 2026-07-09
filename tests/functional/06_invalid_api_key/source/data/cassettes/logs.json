@@ -1,0 +1,18 @@
+{
+  "exit_code": 1,
+  "stderr": "HTTP 401: Unauthorized (requestId=d5f79716-a318-492c-bba1-af905a420581)\nTraceback (most recent call last):\n  File \"src/component.py\", line 203, in <module>\n    Component().execute_action()\n    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^\n  File \"/Users/matyasjirat/VSCodeProjects/Keboola/component-ex-accuweather/.venv/lib/python3.14/site-packages/keboola/component/base.py\", line 251, in execute_action\n    return self._do_execute_action()\n           ~~~~~~~~~~~~~~~~~~~~~~~^^\n  File \"/Users/matyasjirat/VSCodeProjects/Keboola/component-ex-accuweather/.venv/lib/python3.14/site-packages/keboola/component/base.py\", line 265, in _do_execute_action\n    return action_method()\n  File \"src/component.py\", line 88, in run\n    location_key = self._resolve_location_key()\n  File \"src/component.py\", line 116, in _resolve_location_key\n    key = self._search_location_key()\n  File \"src/component.py\", line 123, in _search_location_key\n    results = self._client.search_cities(cfg.location_query, cfg.country_code)\n  File \"/Users/matyasjirat/VSCodeProjects/Keboola/component-ex-accuweather/src/client.py\", line 82, in search_cities\n    return self._get(f\"/locations/v1/cities/{country_code}/search\", {\"q\": q})\n           ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/matyasjirat/VSCodeProjects/Keboola/component-ex-accuweather/src/client.py\", line 53, in _get\n    raise AuthError(self._describe(resp))\nclient.AuthError: HTTP 401: Unauthorized (requestId=d5f79716-a318-492c-bba1-af905a420581)\n",
+  "logs": [
+    {
+      "level": "INFO",
+      "logger": "root",
+      "message": "Loading state file..",
+      "timestamp": "2026-07-09T12:00:00.000Z"
+    },
+    {
+      "level": "ERROR",
+      "logger": "root",
+      "message": "HTTP 401: Unauthorized (requestId=d5f79716-a318-492c-bba1-af905a420581)\nTraceback (most recent call last):\n  File \"src/component.py\", line 203, in <module>\n    Component().execute_action()\n    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^\n  File \"/Users/matyasjirat/VSCodeProjects/Keboola/component-ex-accuweather/.venv/lib/python3.14/site-packages/keboola/component/base.py\", line 251, in execute_action\n    return self._do_execute_action()\n           ~~~~~~~~~~~~~~~~~~~~~~~^^\n  File \"/Users/matyasjirat/VSCodeProjects/Keboola/component-ex-accuweather/.venv/lib/python3.14/site-packages/keboola/component/base.py\", line 265, in _do_execute_action\n    return action_method()\n  File \"src/component.py\", line 88, in run\n    location_key = self._resolve_location_key()\n  File \"src/component.py\", line 116, in _resolve_location_key\n    key = self._search_location_key()\n  File \"src/component.py\", line 123, in _search_location_key\n    results = self._client.search_cities(cfg.location_query, cfg.country_code)\n  File \"/Users/matyasjirat/VSCodeProjects/Keboola/component-ex-accuweather/src/client.py\", line 82, in search_cities\n    return self._get(f\"/locations/v1/cities/{country_code}/search\", {\"q\": q})\n           ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/matyasjirat/VSCodeProjects/Keboola/component-ex-accuweather/src/client.py\", line 53, in _get\n    raise AuthError(self._describe(resp))\nclient.AuthError: HTTP 401: Unauthorized (requestId=d5f79716-a318-492c-bba1-af905a420581)",
+      "timestamp": "2026-07-09T12:00:00.000Z"
+    }
+  ]
+}

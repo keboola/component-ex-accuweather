@@ -1,0 +1,7 @@
+{
+  "_metadata": {"freeze_time": "2026-07-09T12:00:00", "keboola_vcr_version": "0.5.0", "recorded_at": "2026-07-09T14:32:04.687762+00:00"},
+  "interactions": [
+    {"request": {"body": null, "headers": {"Accept": ["application/json"]}, "method": "GET", "uri": "https://dataservice.accuweather.com/locations/v1/cities/CZ/search?q=Prague"}, "response": {"body": {"string": "{\n  \"type\": \"https://httpproblems.com/http-status/401\",\n  \"title\": \"Unauthorized\",\n  \"status\": 401,\n  \"instance\": \"/locations/v1/cities/CZ/search\",\n  \"trace\": {\n    \"timestamp\": \"2026-07-09T14:32:04.719Z\",\n    \"requestId\": \"d5f79716-a318-492c-bba1-af905a420581\",\n    \"buildId\": \"7617756e-24a7-42b1-99ff-5d4f0a5faf74\"\n  },\n  \"Code\": \"Unauthorized\",\n  \"Message\": \"API authorization failed\",\n  \"Reference\": \"https://dataservice.accuweather.com/locations/v1/cities/CZ/search?q=Prague\"\n}"}, "headers": {"Content-Type": ["application/problem+json"], "content-length": ["482"]}, "status": {"code": 401, "message": "Unauthorized"}}}
+  ],
+  "version": 1
+}

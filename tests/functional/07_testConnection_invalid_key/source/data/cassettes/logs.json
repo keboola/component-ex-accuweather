@@ -1,0 +1,5 @@
+{
+  "exit_code": 1,
+  "stderr": "Connection test failed: HTTP 401: Unauthorized (requestId=ae6b6fa3-1b9a-4bdc-b06a-df49c164a2ab)",
+  "logs": []
+}

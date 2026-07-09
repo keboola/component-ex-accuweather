@@ -22,6 +22,19 @@ from parsers import (
     flatten_hourly_forecast,
 )
 
+# VCR cassette sanitizers — picked up by the keboola.datadirtest scaffolder during
+# recording. keboola.vcr is a dev-only (test) dependency, absent in the production
+# image (uv sync --no-dev), so the import is guarded to avoid breaking runtime.
+# The Bearer api_key lives in the Authorization header, which DefaultSanitizer strips
+# by default (only content-type/content-length/accept survive); the extra field names
+# cover any api_key/apikey that could appear in a URL or body.
+try:
+    from keboola.vcr import DefaultSanitizer
+
+    VCR_SANITIZERS = [DefaultSanitizer(additional_sensitive_fields=["api_key", "apikey"])]
+except ImportError:
+    VCR_SANITIZERS = []
+
 _STATE_KEY = "location_key"
 _STATE_RESOLVED_FROM = "resolved_from"
 

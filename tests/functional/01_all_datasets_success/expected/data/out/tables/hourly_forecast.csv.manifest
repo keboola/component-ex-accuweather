@@ -1,0 +1,118 @@
+{
+  "incremental": true,
+  "write_always": false,
+  "delimiter": ",",
+  "enclosure": "\"",
+  "manifest_type": "out",
+  "has_header": false,
+  "schema": [
+    {
+      "name": "location_key",
+      "data_type": {
+        "base": {
+          "type": "STRING"
+        }
+      },
+      "primary_key": true
+    },
+    {
+      "name": "forecast_datetime",
+      "data_type": {
+        "base": {
+          "type": "TIMESTAMP"
+        }
+      },
+      "primary_key": true
+    },
+    {
+      "name": "epoch_datetime",
+      "data_type": {
+        "base": {
+          "type": "INTEGER"
+        }
+      },
+      "nullable": true
+    },
+    {
+      "name": "weather_icon",
+      "data_type": {
+        "base": {
+          "type": "INTEGER"
+        }
+      },
+      "nullable": true
+    },
+    {
+      "name": "icon_phrase",
+      "data_type": {
+        "base": {
+          "type": "STRING"
+        }
+      },
+      "nullable": true
+    },
+    {
+      "name": "is_daylight",
+      "data_type": {
+        "base": {
+          "type": "BOOLEAN"
+        }
+      },
+      "nullable": true
+    },
+    {
+      "name": "temperature",
+      "data_type": {
+        "base": {
+          "type": "NUMERIC"
+        }
+      },
+      "nullable": true
+    },
+    {
+      "name": "temperature_unit",
+      "data_type": {
+        "base": {
+          "type": "STRING"
+        }
+      },
+      "nullable": true
+    },
+    {
+      "name": "precipitation_probability",
+      "data_type": {
+        "base": {
+          "type": "INTEGER"
+        }
+      },
+      "nullable": true
+    },
+    {
+      "name": "has_precipitation",
+      "data_type": {
+        "base": {
+          "type": "BOOLEAN"
+        }
+      },
+      "nullable": true
+    },
+    {
+      "name": "link",
+      "data_type": {
+        "base": {
+          "type": "STRING"
+        }
+      },
+      "nullable": true
+    },
+    {
+      "name": "mobile_link",
+      "data_type": {
+        "base": {
+          "type": "STRING"
+        }
+      },
+      "nullable": true
+    }
+  ]
+}

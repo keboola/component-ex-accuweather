@@ -1,0 +1,28 @@
+[
+  {
+    "name": "06_invalid_api_key",
+    "description": "Run with an invalid API key -> 401 -> AuthError/UserException, exit 1. Recorded WITHOUT --secrets so the bogus key is used.",
+    "config": {
+      "action": "run",
+      "parameters": {
+        "#api_key": "INVALID_KEY_0000000000000000000000",
+        "location_type": "city",
+        "location_query": "Prague",
+        "country_code": "CZ",
+        "datasets": ["current_conditions"]
+      }
+    }
+  },
+  {
+    "name": "07_testConnection_invalid_key",
+    "description": "testConnection sync action with an invalid key -> 401 -> UserException, exit 1. Recorded WITHOUT --secrets.",
+    "config": {
+      "action": "testConnection",
+      "parameters": {
+        "#api_key": "INVALID_KEY_0000000000000000000000",
+        "location_type": "city",
+        "location_query": "Prague"
+      }
+    }
+  }
+]

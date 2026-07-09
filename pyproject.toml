@@ -13,6 +13,11 @@ dependencies = [
 dev = [
     "freezegun>=1.5.1",
     "keboola.datadirtest>=2.2.0",
+    # keboola.vcr 0.5.0's VCRHTTPResponse monkeypatch assumes the 2-arg
+    # __init__(self, recorded_response). vcrpy >=8.2 added a request_url arg,
+    # which makes the patch raise TypeError during record/replay. Pin to the
+    # last 2-arg release until keboola.vcr adopts the newer signature.
+    "vcrpy==8.1.1",
     "mock>=5.2.0",
     "pre-commit>=4.5.0",
     "pytest>=9.0.2",
