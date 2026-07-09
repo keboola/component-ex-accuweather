@@ -81,10 +81,14 @@ _TYPE_MAP: dict[str, Callable[[], BaseType]] = {
 class Component(ComponentBase):
     def __init__(self):
         super().__init__()
+        # Construction validates types/required fields only. The row-level location
+        # cross-field checks run in run() below — NOT here — so sync actions
+        # (testConnection, search_locations) can dispatch without a resolved location.
         self._config = Configuration(**self.configuration.parameters)
         self._client = AccuWeatherClient(self._config.api_key)
 
     def run(self) -> None:
+        self._config.validate_location()
         location_key = self._resolve_location_key()
         datasets = self._config.datasets
         if Dataset.current_conditions in datasets:

@@ -1,7 +1,7 @@
 from enum import IntEnum, StrEnum
 
 from keboola.component.exceptions import UserException
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 
 class Units(StrEnum):
@@ -63,8 +63,15 @@ class Configuration(BaseModel):
             msgs = [f"{'.'.join(str(p) for p in err['loc'])}: {err['msg']}" for err in e.errors()]
             raise UserException(f"Configuration validation error: {', '.join(msgs)}")
 
-    @model_validator(mode="after")
-    def _check_location_fields(self):
+    def validate_location(self) -> None:
+        """Validate the row-level location cross-field requirements.
+
+        Called from run() (extraction) only — NOT during construction — because sync-action
+        dispatch (testConnection validates auth only; search_locations is *how* the user finds
+        a location key) legitimately runs before a location is resolved. Running this at
+        construction crashed those actions (UserException is not a ValueError, so pydantic
+        does not wrap it and the ``except ValidationError`` above never catches it).
+        """
         lt = self.location_type
         if lt in (LocationType.city, LocationType.postal_code) and not self.location_query:
             raise UserException(f"location_query is required when location_type is '{lt}'.")
