@@ -3,9 +3,10 @@ import hashlib
 import logging
 from collections.abc import Callable
 
-from keboola.component.base import ComponentBase
+from keboola.component.base import ComponentBase, sync_action
 from keboola.component.dao import BaseType, ColumnDefinition
 from keboola.component.exceptions import UserException
+from keboola.component.sync_actions import SelectElement
 
 from client import AccuWeatherClient, AuthError, LocationNotFoundError, RateLimitError
 from configuration import Configuration, Dataset, LocationType
@@ -137,6 +138,28 @@ class Component(ComponentBase):
         )
         rows = flatten_hourly_forecast(key, payload)
         self._write_table(TABLE_HOURLY, HOURLY_COLUMNS, HOURLY_PK, rows)
+
+    # --- sync actions --------------------------------------------------------
+    @sync_action("testConnection")
+    def test_connection(self) -> None:
+        try:
+            self._client.search_cities("London")
+        except (AuthError, RateLimitError, LocationNotFoundError) as exc:
+            raise UserException(f"Connection test failed: {exc}")
+
+    @sync_action("search_locations")
+    def search_locations(self) -> list[SelectElement]:
+        q = self._config.location_query
+        if not q:
+            raise UserException("Enter a location query to search.")
+        matches = self._client.search_cities(q, self._config.country_code)
+        elements = []
+        for m in matches:
+            area = (m.get("AdministrativeArea") or {}).get("LocalizedName", "")
+            country = (m.get("Country") or {}).get("LocalizedName", "")
+            label = ", ".join(p for p in (m.get("LocalizedName"), area, country) if p)
+            elements.append(SelectElement(value=m["Key"], label=label))
+        return elements
 
     # --- table writing -------------------------------------------------------
     def _write_table(self, name: str, columns: list[str], pk: list[str], rows: list[dict]) -> None:
