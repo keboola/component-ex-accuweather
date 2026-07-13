@@ -70,5 +70,20 @@
         "datasets": ["current_conditions"]
       }
     }
+  },
+  {
+    "name": "08_indices_location_key",
+    "description": "location_key type -> lifestyle indices (5-day) only -> non-empty table, exit 0",
+    "config": {
+      "action": "run",
+      "parameters": {
+        "#api_key": "DUMMY_KEY",
+        "language": "en-us",
+        "location_type": "location_key",
+        "location_key": "125594",
+        "datasets": ["indices"],
+        "daily_range": 5
+      }
+    }
   }
 ]

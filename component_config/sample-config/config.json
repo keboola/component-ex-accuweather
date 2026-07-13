@@ -10,7 +10,8 @@
     "datasets": [
       "current_conditions",
       "daily_forecast",
-      "hourly_forecast"
+      "hourly_forecast",
+      "indices"
     ],
     "daily_range": 5,
     "hourly_range": 12

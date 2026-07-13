@@ -35,6 +35,7 @@ class Dataset(StrEnum):
     current_conditions = "current_conditions"
     daily_forecast = "daily_forecast"
     hourly_forecast = "hourly_forecast"
+    indices = "indices"
 
 
 class Configuration(BaseModel):

@@ -151,3 +151,10 @@ class AccuWeatherClient:
         if language:
             params["language"] = language
         return self._get(f"/forecasts/v1/hourly/{hours}hour/{location_key}", params)
+
+    def get_indices(self, location_key: str, *, days: int, language: str | None = None) -> list[dict[str, Any]]:
+        # Lifestyle indices endpoint: no metric/details params, only optional language.
+        params: dict[str, Any] = {}
+        if language:
+            params["language"] = language
+        return self._get(f"/indices/v1/daily/{days}day/{location_key}", params)

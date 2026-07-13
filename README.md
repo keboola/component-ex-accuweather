@@ -3,8 +3,8 @@ ex-accuweather
 
 Keboola extractor for the [AccuWeather APIs](https://developer.accuweather.com/apis). For each
 configured location it resolves an AccuWeather `locationKey` and pulls the enabled weather
-datasets — current conditions and/or daily & hourly forecasts — into typed Storage tables as a
-timestamped time series.
+datasets — current conditions, daily & hourly forecasts, and/or lifestyle indices — into typed
+Storage tables as a timestamped time series.
 
 **Table of Contents:**
 
@@ -40,6 +40,7 @@ Supported Endpoints
 | Current conditions | `/currentconditions/v1/{locationKey}` | `current_conditions` | `(location_key, observation_datetime)` |
 | Daily forecast | `/forecasts/v1/daily/{n}day/{locationKey}` | `daily_forecast` | `(location_key, forecast_date)` |
 | Hourly forecast | `/forecasts/v1/hourly/{n}hour/{locationKey}` | `hourly_forecast` | `(location_key, forecast_datetime)` |
+| Lifestyle indices | `/indices/v1/daily/{n}day/{locationKey}` | `indices` | `(location_key, index_id, date)` |
 
 Locations endpoints are used internally to resolve the `locationKey`.
 
@@ -65,8 +66,8 @@ Row-level (per location)
 - `country_code` — ISO country code to disambiguate city/postal search; required for postal lookup.
 - `latitude` / `longitude` — for `geoposition`.
 - `location_key` — a directly-supplied AccuWeather key (skips resolution).
-- `datasets` — multi-select of `current_conditions`, `daily_forecast`, `hourly_forecast`.
-- `daily_range` — number of forecast days (`1`/`5`/`10`/`15`), default `5`.
+- `datasets` — multi-select of `current_conditions`, `daily_forecast`, `hourly_forecast`, `indices`.
+- `daily_range` — number of forecast days (`1`/`5`/`10`/`15`), default `5`; also the horizon for `indices`.
 - `hourly_range` — number of forecast hours (`1`/`12`/`24`/`72`/`120`), default `12`.
 
 Sync actions
@@ -77,8 +78,8 @@ Sync actions
 Output
 ======
 
-Up to three tables (`current_conditions`, `daily_forecast`, `hourly_forecast`) routed to the
-config's default bucket, each with an authoritative schema and a composite primary key.
+Up to four tables (`current_conditions`, `daily_forecast`, `hourly_forecast`, `indices`) routed to
+the config's default bucket, each with an authoritative schema and a composite primary key.
 
 Development
 -----------

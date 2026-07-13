@@ -3,6 +3,7 @@ from typing import Any
 CURRENT_PK = ["location_key", "observation_datetime"]
 DAILY_PK = ["location_key", "forecast_date"]
 HOURLY_PK = ["location_key", "forecast_datetime"]
+INDICES_PK = ["location_key", "index_id", "date"]
 
 CURRENT_COLUMNS = [
     "location_key",
@@ -60,6 +61,17 @@ HOURLY_COLUMNS = [
     "has_precipitation",
     "link",
     "mobile_link",
+]
+INDICES_COLUMNS = [
+    "location_key",
+    "index_id",
+    "index_name",
+    "date",
+    "value",
+    "category",
+    "category_value",
+    "text",
+    "ascending",
 ]
 
 
@@ -131,6 +143,25 @@ def flatten_daily_forecast(location_key: str, payload: dict[str, Any]) -> list[d
                 "sun_set": _dig(d, "Sun", "Set"),
                 "link": d.get("Link"),
                 "mobile_link": d.get("MobileLink"),
+            }
+        )
+    return rows
+
+
+def flatten_indices(location_key: str, payload: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    rows = []
+    for i in payload:
+        rows.append(
+            {
+                "location_key": location_key,
+                "index_id": i.get("ID"),
+                "index_name": i.get("Name"),
+                "date": i.get("LocalDateTime") or i.get("EpochDateTime"),
+                "value": i.get("Value"),
+                "category": i.get("Category"),
+                "category_value": i.get("CategoryValue"),
+                "text": i.get("Text"),
+                "ascending": i.get("Ascending"),
             }
         )
     return rows

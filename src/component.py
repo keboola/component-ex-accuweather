@@ -18,9 +18,12 @@ from parsers import (
     DAILY_PK,
     HOURLY_COLUMNS,
     HOURLY_PK,
+    INDICES_COLUMNS,
+    INDICES_PK,
     flatten_current_conditions,
     flatten_daily_forecast,
     flatten_hourly_forecast,
+    flatten_indices,
 )
 
 # VCR cassette sanitizers — picked up by the keboola.datadirtest scaffolder during
@@ -42,6 +45,7 @@ _STATE_RESOLVED_FROM = "resolved_from"
 TABLE_CURRENT = "current_conditions"
 TABLE_DAILY = "daily_forecast"
 TABLE_HOURLY = "hourly_forecast"
+TABLE_INDICES = "indices"
 
 # column name -> BaseType factory (authoritative native type); default STRING
 _TYPE_MAP: dict[str, Callable[[], BaseType]] = {
@@ -71,9 +75,14 @@ _TYPE_MAP: dict[str, Callable[[], BaseType]] = {
     "is_day_time": BaseType.boolean,
     "is_daylight": BaseType.boolean,
     "day_has_precipitation": BaseType.boolean,
+    "ascending": BaseType.boolean,
+    "index_id": BaseType.integer,
+    "value": BaseType.numeric,
+    "category_value": BaseType.integer,
     "observation_datetime": BaseType.timestamp,
     "forecast_date": BaseType.timestamp,
     "forecast_datetime": BaseType.timestamp,
+    "date": BaseType.timestamp,
     "sun_rise": BaseType.timestamp,
     "sun_set": BaseType.timestamp,
 }
@@ -98,6 +107,8 @@ class Component(ComponentBase):
             self._extract_daily_forecast(location_key)
         if Dataset.hourly_forecast in datasets:
             self._extract_hourly_forecast(location_key)
+        if Dataset.indices in datasets:
+            self._extract_indices(location_key)
 
     # --- location resolution -------------------------------------------------
     def _resolved_from(self) -> str:
@@ -171,6 +182,15 @@ class Component(ComponentBase):
         )
         rows = flatten_hourly_forecast(key, payload)
         self._write_table(TABLE_HOURLY, HOURLY_COLUMNS, HOURLY_PK, rows)
+
+    def _extract_indices(self, key: str) -> None:
+        payload = self._client.get_indices(
+            key,
+            days=self._config.daily_range,
+            language=self._config.language,
+        )
+        rows = flatten_indices(key, payload)
+        self._write_table(TABLE_INDICES, INDICES_COLUMNS, INDICES_PK, rows)
 
     # --- sync actions --------------------------------------------------------
     @sync_action("testConnection")

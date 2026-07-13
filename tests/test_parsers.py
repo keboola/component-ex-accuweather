@@ -5,9 +5,12 @@ from parsers import (
     DAILY_PK,
     HOURLY_COLUMNS,
     HOURLY_PK,
+    INDICES_COLUMNS,
+    INDICES_PK,
     flatten_current_conditions,
     flatten_daily_forecast,
     flatten_hourly_forecast,
+    flatten_indices,
 )
 
 
@@ -131,3 +134,38 @@ def test_flatten_handles_missing_nested_keys():
     rows = flatten_current_conditions("1", [{"WeatherText": "Sunny"}])
     assert rows[0]["temperature"] is None
     assert rows[0]["wind_direction"] is None
+
+
+def test_flatten_indices():
+    payload = [
+        {
+            "Name": "UV Index",
+            "ID": 26,
+            "LocalDateTime": "2026-07-09T07:00:00+02:00",
+            "EpochDateTime": 1783573200,
+            "Value": 8.0,
+            "Category": "High",
+            "CategoryValue": 3,
+            "Text": "Very high UV; wear sunscreen.",
+            "Ascending": True,
+        }
+    ]
+    rows = flatten_indices("125594", payload)
+    assert len(rows) == 1
+    r = rows[0]
+    assert r["location_key"] == "125594"
+    assert r["index_id"] == 26
+    assert r["index_name"] == "UV Index"
+    assert r["date"] == "2026-07-09T07:00:00+02:00"
+    assert r["value"] == 8.0
+    assert r["category"] == "High"
+    assert r["category_value"] == 3
+    assert r["text"] == "Very high UV; wear sunscreen."
+    assert r["ascending"] is True
+    assert set(INDICES_PK).issubset(r.keys())
+    assert set(r.keys()) == set(INDICES_COLUMNS)
+
+
+def test_flatten_indices_falls_back_to_epoch_when_no_local_datetime():
+    rows = flatten_indices("1", [{"ID": 1, "Name": "Ski", "EpochDateTime": 1783573200}])
+    assert rows[0]["date"] == 1783573200

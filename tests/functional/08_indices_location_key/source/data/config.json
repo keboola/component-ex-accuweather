@@ -1,0 +1,13 @@
+{
+  "action": "run",
+  "parameters": {
+    "#api_key": "DUMMY_KEY",
+    "language": "en-us",
+    "location_type": "location_key",
+    "location_key": "125594",
+    "datasets": [
+      "indices"
+    ],
+    "daily_range": 5
+  }
+}

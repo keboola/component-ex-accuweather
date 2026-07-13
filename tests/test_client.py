@@ -95,6 +95,25 @@ def test_hourly_forecast_path():
         assert out[0]["Temperature"]["Value"] == 1
 
 
+def test_indices_builds_correct_path_and_no_metric_details():
+    c = AccuWeatherClient("KEY")
+    with requests_mock.Mocker() as m:
+        m.get(f"{BASE}/indices/v1/daily/5day/125594", json=[{"ID": 26, "Name": "UV Index"}])
+        out = c.get_indices("125594", days=5)
+        assert out[0]["ID"] == 26
+        assert "metric" not in m.last_request.qs
+        assert "details" not in m.last_request.qs
+        assert "language" not in m.last_request.qs
+
+
+def test_indices_language_param_sent():
+    c = AccuWeatherClient("KEY")
+    with requests_mock.Mocker() as m:
+        m.get(f"{BASE}/indices/v1/daily/1day/125594", json=[])
+        c.get_indices("125594", days=1, language="cs-cz")
+        assert m.last_request.qs["language"] == ["cs-cz"]
+
+
 def test_language_param_sent_on_current_conditions():
     c = AccuWeatherClient("KEY")
     with requests_mock.Mocker() as m:

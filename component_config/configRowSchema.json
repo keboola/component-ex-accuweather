@@ -135,13 +135,15 @@
         "enum": [
           "current_conditions",
           "daily_forecast",
-          "hourly_forecast"
+          "hourly_forecast",
+          "indices"
         ],
         "options": {
           "enum_titles": [
             "Current conditions",
             "Daily forecast",
-            "Hourly forecast"
+            "Hourly forecast",
+            "Lifestyle indices"
           ]
         }
       }
@@ -167,7 +169,8 @@
         ],
         "dependencies": {
           "datasets": [
-            "daily_forecast"
+            "daily_forecast",
+            "indices"
           ]
         }
       }
