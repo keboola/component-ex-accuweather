@@ -63,8 +63,8 @@ Row-level (per location)
 - `city_query` — city name to search (`city` mode).
 - `postal_query` — postal/ZIP code to look up (`postal_code` mode; `country_code` required).
 - `location_search` — free-text term for the `search_locations` sync action (`location_key` mode).
-- `country_code` — ISO country code to disambiguate city/postal search; required for postal lookup.
-- `city_location_key` / `postal_location_key` — optional key confirmed by the "Confirm location" picker
+- `country_code` — ISO 3166 2-letter country code to disambiguate city/postal search; required for postal lookup.
+- `city_location_key` / `postal_location_key` — optional key confirmed by the "Find & confirm location" picker
   in `city` / `postal_code` mode. When set it pins the exact place and skips resolution; when empty the
   free-text query above resolves at run time (headless configs leave these empty).
 - `latitude` / `longitude` — for `geoposition`.

@@ -10,64 +10,28 @@
       "type": "string",
       "title": "Location Type",
       "enum": [
+        "location_key",
         "city",
         "postal_code",
-        "geoposition",
-        "location_key"
+        "geoposition"
       ],
-      "default": "city",
+      "default": "location_key",
       "description": "How this location is identified.",
       "propertyOrder": 10,
       "options": {
         "enum_titles": [
+          "Search & pick location key",
           "City name",
           "Postal code",
-          "Geo-position (latitude/longitude)",
-          "AccuWeather location key"
+          "Geo-position (latitude/longitude)"
         ]
-      }
-    },
-    "city_query": {
-      "type": "string",
-      "title": "City name",
-      "description": "City name to search.",
-      "propertyOrder": 20,
-      "options": {
-        "tooltip": "City name to search, e.g. Prague. Add a Country code to disambiguate. This value resolves automatically at run time; use Confirm location below to pin an exact match.",
-        "dependencies": {
-          "location_type": "city"
-        }
-      }
-    },
-    "postal_query": {
-      "type": "string",
-      "title": "Postal code",
-      "description": "Postal/ZIP code to look up.",
-      "propertyOrder": 20,
-      "options": {
-        "tooltip": "Postal/ZIP code, e.g. 11000. A Country code is required for postal lookup. This value resolves automatically at run time; use Confirm location below to pin an exact match.",
-        "dependencies": {
-          "location_type": "postal_code"
-        }
-      }
-    },
-    "location_search": {
-      "type": "string",
-      "title": "Location search",
-      "description": "Search term used by the Search locations helper.",
-      "propertyOrder": 20,
-      "options": {
-        "tooltip": "Search by city or postal code to find the key, or paste a known key below.",
-        "dependencies": {
-          "location_type": "location_key"
-        }
       }
     },
     "country_code": {
       "type": "string",
       "title": "Country Code",
-      "description": "ISO 3166 country code to disambiguate the search.",
-      "propertyOrder": 30,
+      "description": "ISO 3166 2-letter country code to disambiguate the search.",
+      "propertyOrder": 22,
       "options": {
         "tooltip": "Two-letter ISO country code, e.g. US, GB, CZ. Narrows the city or postal code search. Required for postal code lookup.",
         "dependencies": {
@@ -79,17 +43,29 @@
         }
       }
     },
+    "city_query": {
+      "type": "string",
+      "title": "City name",
+      "description": "City name to search.",
+      "propertyOrder": 20,
+      "options": {
+        "tooltip": "Type a city, e.g. Prague, and optionally set the Country code below to narrow it. Then use Find & confirm location to pin the exact place, or leave it empty to resolve automatically at run time.",
+        "dependencies": {
+          "location_type": "city"
+        }
+      }
+    },
     "city_location_key": {
       "type": "string",
-      "title": "Confirm location",
+      "title": "Confirmed location",
       "format": "select",
       "enum": [],
-      "description": "Optional: pick the exact place to confirm it.",
-      "propertyOrder": 35,
+      "description": "Optional: confirm the exact place.",
+      "propertyOrder": 25,
       "options": {
-        "tooltip": "Type a City name (and optional Country code) above, then click Search locations to confirm the exact place. Leave empty to resolve the city name automatically at run time.",
+        "tooltip": "Click Find & confirm location to search using the City name and Country code above, then pick the exact match. Leave empty to resolve the city name automatically at run time.",
         "async": {
-          "label": "Search locations",
+          "label": "Find & confirm location",
           "action": "search_locations"
         },
         "dependencies": {
@@ -97,21 +73,45 @@
         }
       }
     },
+    "postal_query": {
+      "type": "string",
+      "title": "Postal code",
+      "description": "Postal/ZIP code to look up.",
+      "propertyOrder": 20,
+      "options": {
+        "tooltip": "Type a postal/ZIP code, e.g. 11000; a Country code below is required. Then use Find & confirm location to pin the exact place, or leave it empty to resolve automatically at run time.",
+        "dependencies": {
+          "location_type": "postal_code"
+        }
+      }
+    },
     "postal_location_key": {
       "type": "string",
-      "title": "Confirm location",
+      "title": "Confirmed location",
       "format": "select",
       "enum": [],
-      "description": "Optional: pick the exact place to confirm it.",
-      "propertyOrder": 35,
+      "description": "Optional: confirm the exact place.",
+      "propertyOrder": 25,
       "options": {
-        "tooltip": "Enter the Postal code and Country code above, then click Search locations to confirm the exact place. Leave empty to resolve the postal code automatically at run time.",
+        "tooltip": "Click Find & confirm location to search using the Postal code and Country code above, then pick the exact match. Leave empty to resolve the postal code automatically at run time.",
         "async": {
-          "label": "Search locations",
+          "label": "Find & confirm location",
           "action": "search_locations"
         },
         "dependencies": {
           "location_type": "postal_code"
+        }
+      }
+    },
+    "location_search": {
+      "type": "string",
+      "title": "Location search query",
+      "description": "Search text for finding an AccuWeather location key.",
+      "propertyOrder": 20,
+      "options": {
+        "tooltip": "Type a city or postal code, then use Find & confirm location below to look up and pick the matching AccuWeather location key, or paste a known key directly into that field.",
+        "dependencies": {
+          "location_type": "location_key"
         }
       }
     },
@@ -139,16 +139,16 @@
     },
     "location_key": {
       "type": "string",
-      "title": "Location Key",
+      "title": "Confirmed location key",
       "format": "select",
       "enum": [],
       "description": "AccuWeather location key.",
-      "propertyOrder": 60,
+      "propertyOrder": 25,
       "options": {
-        "tooltip": "Enter a known AccuWeather location key, or type a Location search above and click Search locations to pick one.",
+        "tooltip": "Click Find & confirm location to search using the query above and pick a match, or paste a known AccuWeather location key here.",
         "creatable": true,
         "async": {
-          "label": "Search locations",
+          "label": "Find & confirm location",
           "action": "search_locations"
         },
         "dependencies": {

@@ -46,7 +46,7 @@ class Configuration(BaseModel):
     language: str = "en-us"
     include_details: bool = True
 
-    location_type: LocationType = LocationType.city
+    location_type: LocationType = LocationType.location_key
     city_query: str | None = None
     postal_query: str | None = None
     location_search: str | None = None
