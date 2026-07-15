@@ -109,6 +109,74 @@ def test_flatten_daily_forecast():
     assert set(rows[0].keys()) == set(DAILY_COLUMNS)
 
 
+_DAILY_DETAIL_COLUMNS = [
+    "realfeel_temperature_min",
+    "realfeel_temperature_max",
+    "hours_of_sun",
+    "day_wind_speed",
+    "day_wind_direction",
+    "day_wind_direction_degrees",
+    "day_thunderstorm_probability",
+    "day_rain_probability",
+    "night_wind_speed",
+    "night_wind_direction",
+    "night_wind_direction_degrees",
+    "night_thunderstorm_probability",
+    "night_rain_probability",
+    "uv_index",
+    "uv_index_category",
+    "air_quality_category",
+]
+
+
+def test_flatten_daily_forecast_details_false_leaves_detail_columns_empty():
+    # No details=true payload -> every detail column is present but None (empty in CSV),
+    # exactly like the current-conditions detail columns.
+    payload = {"DailyForecasts": [{"Date": "2026-07-09T07:00:00+02:00", "Temperature": {}}]}
+    r = flatten_daily_forecast("1", payload)[0]
+    assert set(_DAILY_DETAIL_COLUMNS).issubset(r.keys())
+    assert all(r[c] is None for c in _DAILY_DETAIL_COLUMNS)
+
+
+def test_flatten_daily_forecast_details_true_populates_detail_columns():
+    payload = {
+        "DailyForecasts": [
+            {
+                "Date": "2026-07-09T07:00:00+02:00",
+                "RealFeelTemperature": {"Minimum": {"Value": 13.5}, "Maximum": {"Value": 26.6}},
+                "HoursOfSun": 14.7,
+                "Day": {
+                    "ThunderstormProbability": 0,
+                    "RainProbability": 1,
+                    "Wind": {"Speed": {"Value": 16.7}, "Direction": {"Degrees": 329, "Localized": "NNW"}},
+                },
+                "Night": {
+                    "ThunderstormProbability": 2,
+                    "RainProbability": 5,
+                    "Wind": {"Speed": {"Value": 5.6}, "Direction": {"Degrees": 200, "Localized": "SSW"}},
+                },
+                "AirAndPollen": [
+                    {"Name": "AirQuality", "Category": "Good"},
+                    {"Name": "UVIndex", "Value": 8, "Category": "Very High"},
+                ],
+            }
+        ]
+    }
+    r = flatten_daily_forecast("1", payload)[0]
+    assert r["realfeel_temperature_min"] == 13.5
+    assert r["realfeel_temperature_max"] == 26.6
+    assert r["hours_of_sun"] == 14.7
+    assert r["day_wind_speed"] == 16.7
+    assert r["day_wind_direction"] == "NNW"
+    assert r["day_wind_direction_degrees"] == 329
+    assert r["day_rain_probability"] == 1
+    assert r["night_wind_speed"] == 5.6
+    assert r["night_thunderstorm_probability"] == 2
+    assert r["uv_index"] == 8
+    assert r["uv_index_category"] == "Very High"
+    assert r["air_quality_category"] == "Good"
+
+
 def test_flatten_hourly_forecast():
     payload = [
         {
@@ -128,6 +196,61 @@ def test_flatten_hourly_forecast():
     assert rows[0]["temperature"] == 24.0
     assert set(HOURLY_PK).issubset(rows[0].keys())
     assert set(rows[0].keys()) == set(HOURLY_COLUMNS)
+
+
+_HOURLY_DETAIL_COLUMNS = [
+    "realfeel_temperature",
+    "wind_speed",
+    "wind_direction",
+    "wind_direction_degrees",
+    "relative_humidity",
+    "dew_point",
+    "uv_index",
+    "uv_index_text",
+    "visibility",
+    "cloud_cover",
+    "precipitation_type",
+    "rain",
+]
+
+
+def test_flatten_hourly_forecast_details_false_leaves_detail_columns_empty():
+    payload = [{"DateTime": "2026-07-09T15:00:00+02:00", "Temperature": {"Value": 24.0}}]
+    r = flatten_hourly_forecast("1", payload)[0]
+    assert set(_HOURLY_DETAIL_COLUMNS).issubset(r.keys())
+    assert all(r[c] is None for c in _HOURLY_DETAIL_COLUMNS)
+
+
+def test_flatten_hourly_forecast_details_true_populates_detail_columns():
+    payload = [
+        {
+            "DateTime": "2026-07-09T17:00:00+02:00",
+            "Temperature": {"Value": 25.4, "Unit": "C"},
+            "RealFeelTemperature": {"Value": 26.0},
+            "Wind": {"Speed": {"Value": 14.8}, "Direction": {"Degrees": 341, "Localized": "NNW"}},
+            "RelativeHumidity": 32,
+            "DewPoint": {"Value": 7.8},
+            "UVIndex": 3,
+            "UVIndexText": "Moderate",
+            "Visibility": {"Value": 16.1},
+            "CloudCover": 3,
+            "PrecipitationType": "Rain",
+            "Rain": {"Value": 0.5},
+        }
+    ]
+    r = flatten_hourly_forecast("1", payload)[0]
+    assert r["realfeel_temperature"] == 26.0
+    assert r["wind_speed"] == 14.8
+    assert r["wind_direction"] == "NNW"
+    assert r["wind_direction_degrees"] == 341
+    assert r["relative_humidity"] == 32
+    assert r["dew_point"] == 7.8
+    assert r["uv_index"] == 3
+    assert r["uv_index_text"] == "Moderate"
+    assert r["visibility"] == 16.1
+    assert r["cloud_cover"] == 3
+    assert r["precipitation_type"] == "Rain"
+    assert r["rain"] == 0.5
 
 
 def test_flatten_handles_missing_nested_keys():

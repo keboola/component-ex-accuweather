@@ -46,6 +46,23 @@ DAILY_COLUMNS = [
     "night_precipitation_probability",
     "sun_rise",
     "sun_set",
+    # detail-only columns (populated when details=true; empty otherwise)
+    "realfeel_temperature_min",
+    "realfeel_temperature_max",
+    "hours_of_sun",
+    "day_wind_speed",
+    "day_wind_direction",
+    "day_wind_direction_degrees",
+    "day_thunderstorm_probability",
+    "day_rain_probability",
+    "night_wind_speed",
+    "night_wind_direction",
+    "night_wind_direction_degrees",
+    "night_thunderstorm_probability",
+    "night_rain_probability",
+    "uv_index",
+    "uv_index_category",
+    "air_quality_category",
     "link",
     "mobile_link",
 ]
@@ -60,6 +77,19 @@ HOURLY_COLUMNS = [
     "temperature_unit",
     "precipitation_probability",
     "has_precipitation",
+    # detail-only columns (populated when details=true; empty otherwise)
+    "realfeel_temperature",
+    "wind_speed",
+    "wind_direction",
+    "wind_direction_degrees",
+    "relative_humidity",
+    "dew_point",
+    "uv_index",
+    "uv_index_text",
+    "visibility",
+    "cloud_cover",
+    "precipitation_type",
+    "rain",
     "link",
     "mobile_link",
 ]
@@ -95,6 +125,15 @@ def _dig(d: dict[str, Any] | None, *keys: str) -> Any:
             return None
         cur = cur.get(k)
     return cur
+
+
+def _air_and_pollen(d: dict[str, Any], name: str, key: str = "Value") -> Any:
+    # daily details expose UV / air-quality / pollen as a flat list of named entries;
+    # pull one entry by its Name and return the requested sub-field (Value or Category).
+    for entry in d.get("AirAndPollen") or []:
+        if isinstance(entry, dict) and entry.get("Name") == name:
+            return entry.get(key)
+    return None
 
 
 def flatten_current_conditions(
@@ -135,6 +174,12 @@ def flatten_current_conditions(
 
 
 def flatten_daily_forecast(location_key: str, payload: dict[str, Any]) -> list[dict[str, Any]]:
+    # The daily-forecast endpoint takes a `metric` query param, so numeric values already
+    # arrive in the configured unit system (single Value, no Metric/Imperial sub-objects) —
+    # units are honored upstream by the client, unlike the current-conditions payload.
+    # Detail-only fields (realfeel, day/night wind, thunderstorm/rain probability, hours of
+    # sun, UV / air quality) are present only when details=true; they resolve to None (empty)
+    # otherwise, exactly like the current-conditions detail columns.
     rows = []
     for d in payload.get("DailyForecasts", []):
         rows.append(
@@ -154,6 +199,23 @@ def flatten_daily_forecast(location_key: str, payload: dict[str, Any]) -> list[d
                 "night_precipitation_probability": _dig(d, "Night", "PrecipitationProbability"),
                 "sun_rise": _dig(d, "Sun", "Rise"),
                 "sun_set": _dig(d, "Sun", "Set"),
+                # detail-only fields (details=true)
+                "realfeel_temperature_min": _dig(d, "RealFeelTemperature", "Minimum", "Value"),
+                "realfeel_temperature_max": _dig(d, "RealFeelTemperature", "Maximum", "Value"),
+                "hours_of_sun": d.get("HoursOfSun"),
+                "day_wind_speed": _dig(d, "Day", "Wind", "Speed", "Value"),
+                "day_wind_direction": _dig(d, "Day", "Wind", "Direction", "Localized"),
+                "day_wind_direction_degrees": _dig(d, "Day", "Wind", "Direction", "Degrees"),
+                "day_thunderstorm_probability": _dig(d, "Day", "ThunderstormProbability"),
+                "day_rain_probability": _dig(d, "Day", "RainProbability"),
+                "night_wind_speed": _dig(d, "Night", "Wind", "Speed", "Value"),
+                "night_wind_direction": _dig(d, "Night", "Wind", "Direction", "Localized"),
+                "night_wind_direction_degrees": _dig(d, "Night", "Wind", "Direction", "Degrees"),
+                "night_thunderstorm_probability": _dig(d, "Night", "ThunderstormProbability"),
+                "night_rain_probability": _dig(d, "Night", "RainProbability"),
+                "uv_index": _air_and_pollen(d, "UVIndex", "Value"),
+                "uv_index_category": _air_and_pollen(d, "UVIndex", "Category"),
+                "air_quality_category": _air_and_pollen(d, "AirQuality", "Category"),
                 "link": d.get("Link"),
                 "mobile_link": d.get("MobileLink"),
             }
@@ -181,6 +243,11 @@ def flatten_indices(location_key: str, payload: list[dict[str, Any]]) -> list[di
 
 
 def flatten_hourly_forecast(location_key: str, payload: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    # Like the daily endpoint, the hourly endpoint takes a `metric` query param, so numeric
+    # values already arrive in the configured unit system (single Value, no Metric/Imperial
+    # sub-objects). Detail-only fields (realfeel, wind, humidity, dew point, UV, visibility,
+    # cloud cover, precipitation type/intensity) appear only when details=true and resolve to
+    # None (empty) otherwise, matching the current-conditions detail-column pattern.
     rows = []
     for h in payload:
         rows.append(
@@ -195,6 +262,19 @@ def flatten_hourly_forecast(location_key: str, payload: list[dict[str, Any]]) ->
                 "temperature_unit": _dig(h, "Temperature", "Unit"),
                 "precipitation_probability": h.get("PrecipitationProbability"),
                 "has_precipitation": h.get("HasPrecipitation"),
+                # detail-only fields (details=true)
+                "realfeel_temperature": _dig(h, "RealFeelTemperature", "Value"),
+                "wind_speed": _dig(h, "Wind", "Speed", "Value"),
+                "wind_direction": _dig(h, "Wind", "Direction", "Localized"),
+                "wind_direction_degrees": _dig(h, "Wind", "Direction", "Degrees"),
+                "relative_humidity": h.get("RelativeHumidity"),
+                "dew_point": _dig(h, "DewPoint", "Value"),
+                "uv_index": h.get("UVIndex"),
+                "uv_index_text": h.get("UVIndexText"),
+                "visibility": _dig(h, "Visibility", "Value"),
+                "cloud_cover": h.get("CloudCover"),
+                "precipitation_type": h.get("PrecipitationType"),
+                "rain": _dig(h, "Rain", "Value"),
                 "link": h.get("Link"),
                 "mobile_link": h.get("MobileLink"),
             }

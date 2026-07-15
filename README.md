@@ -77,7 +77,8 @@ Row-level (per location)
   - `indices` (default `false`) with `indices_range` (`1`/`5`/`10`/`15`, default `5`) and an optional
     `indices_ids` integer list — empty means all indices, otherwise only the listed AccuWeather index IDs
     are kept (filtered client-side).
-  - Each `*_details` toggle maps to the AccuWeather `details=true` query parameter for that endpoint.
+  - Each `*_details` toggle adds extra detail columns to that dataset's table (see Output below). The
+    columns are always present in the schema and left empty when the toggle is off.
 
 Sync actions
 -------
@@ -89,6 +90,24 @@ Output
 
 Up to four tables (`current_conditions`, `daily_forecast`, `hourly_forecast`, `indices`) routed to
 the config's default bucket, each with an authoritative schema and a composite primary key.
+
+Detail columns (populated only when the matching `*_details` toggle is on; empty otherwise):
+
+- `current_conditions` — `realfeel_temperature`, `relative_humidity`, `wind_speed`,
+  `wind_direction_degrees`, `wind_direction`, `uv_index`, `uv_index_text`, `visibility`,
+  `cloud_cover`, `pressure`.
+- `daily_forecast` — `realfeel_temperature_min`, `realfeel_temperature_max`, `hours_of_sun`,
+  `day_wind_speed`, `day_wind_direction`, `day_wind_direction_degrees`,
+  `day_thunderstorm_probability`, `day_rain_probability`, `night_wind_speed`,
+  `night_wind_direction`, `night_wind_direction_degrees`, `night_thunderstorm_probability`,
+  `night_rain_probability`, `uv_index`, `uv_index_category`, `air_quality_category`.
+- `hourly_forecast` — `realfeel_temperature`, `wind_speed`, `wind_direction`,
+  `wind_direction_degrees`, `relative_humidity`, `dew_point`, `uv_index`, `uv_index_text`,
+  `visibility`, `cloud_cover`, `precipitation_type`, `rain`.
+
+Forecast values follow the configured `units` (Metric/Imperial): the daily and hourly endpoints take a
+`metric` query parameter, so their values arrive already in the chosen system; `current_conditions`
+returns both systems and the parser selects the configured one.
 
 Development
 -----------

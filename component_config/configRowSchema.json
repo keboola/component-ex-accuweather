@@ -19,10 +19,10 @@
       "propertyOrder": 10,
       "options": {
         "enum_titles": [
-          "Search & pick location key",
-          "City name",
-          "Postal code",
-          "Geo-position (latitude/longitude)"
+          "Search & Pick Location Key",
+          "City Name",
+          "Postal Code",
+          "Geo-position (Latitude/Longitude)"
         ]
       }
     },
@@ -44,7 +44,7 @@
     },
     "city_query": {
       "type": "string",
-      "title": "City name",
+      "title": "City Name",
       "description": "City name to search.",
       "propertyOrder": 20,
       "options": {
@@ -56,7 +56,7 @@
     },
     "city_location_key": {
       "type": "string",
-      "title": "Confirmed location",
+      "title": "Confirmed Location",
       "format": "select",
       "enum": [],
       "description": "Optional: confirm the exact place.",
@@ -74,7 +74,7 @@
     },
     "postal_query": {
       "type": "string",
-      "title": "Postal code",
+      "title": "Postal Code",
       "description": "Postal/ZIP code to look up.",
       "propertyOrder": 20,
       "options": {
@@ -86,7 +86,7 @@
     },
     "postal_location_key": {
       "type": "string",
-      "title": "Confirmed location",
+      "title": "Confirmed Location",
       "format": "select",
       "enum": [],
       "description": "Optional: confirm the exact place.",
@@ -104,7 +104,7 @@
     },
     "location_search": {
       "type": "string",
-      "title": "Location search query",
+      "title": "Location Search Query",
       "description": "Search text for finding an AccuWeather location key.",
       "propertyOrder": 20,
       "options": {
@@ -138,7 +138,7 @@
     },
     "location_key": {
       "type": "string",
-      "title": "Confirmed location key",
+      "title": "Confirmed Location Key",
       "format": "select",
       "enum": [],
       "description": "AccuWeather location key.",
@@ -163,7 +163,7 @@
       "properties": {
         "current_conditions": {
           "type": "boolean",
-          "title": "Current conditions",
+          "title": "Current Conditions",
           "format": "checkbox",
           "default": true,
           "description": "Latest observed conditions for the location.",
@@ -171,13 +171,13 @@
         },
         "current_conditions_details": {
           "type": "boolean",
-          "title": "Current conditions – include full details",
+          "title": "Current Conditions – Include Full Details",
           "format": "checkbox",
           "default": false,
           "description": "Fetch the extended detail fields for current conditions.",
           "propertyOrder": 20,
           "options": {
-            "tooltip": "Maps to the AccuWeather details=true parameter for the current conditions endpoint; populates extra detail columns.",
+            "tooltip": "Adds extra columns to the current conditions table: realfeel_temperature, relative_humidity, wind_speed, uv_index, visibility, cloud_cover and pressure.",
             "dependencies": {
               "current_conditions": true
             }
@@ -185,7 +185,7 @@
         },
         "daily_forecast": {
           "type": "boolean",
-          "title": "Daily forecast",
+          "title": "Daily Forecast",
           "format": "checkbox",
           "default": false,
           "description": "Multi-day daily forecast for the location.",
@@ -217,13 +217,13 @@
         },
         "daily_forecast_details": {
           "type": "boolean",
-          "title": "Daily forecast – include full details",
+          "title": "Daily Forecast – Include Full Details",
           "format": "checkbox",
           "default": false,
           "description": "Fetch the extended detail fields for the daily forecast.",
           "propertyOrder": 50,
           "options": {
-            "tooltip": "Maps to the AccuWeather details=true parameter for the daily forecast endpoint; populates extra detail columns.",
+            "tooltip": "Adds extra columns to the daily forecast table: realfeel_temperature_min/max, hours_of_sun, day/night wind speed and direction, day/night thunderstorm and rain probability, uv_index and air_quality_category.",
             "dependencies": {
               "daily_forecast": true
             }
@@ -231,7 +231,7 @@
         },
         "hourly_forecast": {
           "type": "boolean",
-          "title": "Hourly forecast",
+          "title": "Hourly Forecast",
           "format": "checkbox",
           "default": false,
           "description": "Multi-hour hourly forecast for the location.",
@@ -265,13 +265,13 @@
         },
         "hourly_forecast_details": {
           "type": "boolean",
-          "title": "Hourly forecast – include full details",
+          "title": "Hourly Forecast – Include Full Details",
           "format": "checkbox",
           "default": false,
           "description": "Fetch the extended detail fields for the hourly forecast.",
           "propertyOrder": 80,
           "options": {
-            "tooltip": "Maps to the AccuWeather details=true parameter for the hourly forecast endpoint; populates extra detail columns.",
+            "tooltip": "Adds extra columns to the hourly forecast table: realfeel_temperature, wind_speed and wind_direction, relative_humidity, dew_point, uv_index, visibility, cloud_cover, precipitation_type and rain amount.",
             "dependencies": {
               "hourly_forecast": true
             }
@@ -279,7 +279,7 @@
         },
         "indices": {
           "type": "boolean",
-          "title": "Lifestyle indices",
+          "title": "Lifestyle Indices",
           "format": "checkbox",
           "default": false,
           "description": "Daily lifestyle indices for the location.",
@@ -311,14 +311,15 @@
         },
         "indices_ids": {
           "type": "array",
-          "title": "Indices filter",
-          "description": "Optional: restrict output to specific AccuWeather index IDs.",
+          "title": "Indices Filter",
+          "description": "Optional. Leave empty to output all indices, or list the AccuWeather index IDs to keep (e.g. 1, 5, 26). See the full index list at https://developer.accuweather.com/documentation/indices",
           "propertyOrder": 110,
           "items": {
-            "type": "integer"
+            "type": "integer",
+            "title": "Index ID"
           },
           "options": {
-            "tooltip": "Leave empty to output all indices. Otherwise list the AccuWeather index IDs to keep, e.g. 1, 5, 26. See the index list at https://developer.accuweather.com/apis (Indices API).",
+            "tooltip": "Restricts the indices output to the listed AccuWeather index IDs. Leave empty to keep every index. Find each index ID and name in the AccuWeather index list at https://developer.accuweather.com/documentation/indices",
             "dependencies": {
               "indices": true
             }
