@@ -1,3 +1,4 @@
+from datetime import UTC, datetime
 from typing import Any
 
 CURRENT_PK = ["location_key", "observation_datetime"]
@@ -73,6 +74,18 @@ INDICES_COLUMNS = [
     "text",
     "ascending",
 ]
+
+
+def _epoch_to_iso(epoch: Any) -> str | None:
+    # AccuWeather EpochDateTime is Unix seconds (UTC). The `date` column is a TIMESTAMP
+    # (and part of the indices PK), so the epoch fallback must stay a timestamp string —
+    # never a bare int — to keep authoritative typing and the PK consistent.
+    if epoch is None:
+        return None
+    try:
+        return datetime.fromtimestamp(int(epoch), tz=UTC).isoformat()
+    except ValueError, TypeError, OSError, OverflowError:
+        return None
 
 
 def _dig(d: dict[str, Any] | None, *keys: str) -> Any:
@@ -156,7 +169,7 @@ def flatten_indices(location_key: str, payload: list[dict[str, Any]]) -> list[di
                 "location_key": location_key,
                 "index_id": i.get("ID"),
                 "index_name": i.get("Name"),
-                "date": i.get("LocalDateTime") or i.get("EpochDateTime"),
+                "date": i.get("LocalDateTime") or _epoch_to_iso(i.get("EpochDateTime")),
                 "value": i.get("Value"),
                 "category": i.get("Category"),
                 "category_value": i.get("CategoryValue"),

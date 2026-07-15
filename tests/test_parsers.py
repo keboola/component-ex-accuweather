@@ -168,4 +168,6 @@ def test_flatten_indices():
 
 def test_flatten_indices_falls_back_to_epoch_when_no_local_datetime():
     rows = flatten_indices("1", [{"ID": 1, "Name": "Ski", "EpochDateTime": 1783573200}])
-    assert rows[0]["date"] == 1783573200
+    # The epoch fallback is converted to an ISO timestamp string so the TIMESTAMP-typed
+    # `date` PK column never carries a bare integer.
+    assert rows[0]["date"] == "2026-07-09T05:00:00+00:00"

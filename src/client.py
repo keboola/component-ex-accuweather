@@ -68,7 +68,13 @@ class AccuWeatherClient:
                 raise AccuWeatherApiError(f"Network error calling AccuWeather {path}: {exc}") from exc
             last_status = resp.status_code
             if 200 <= resp.status_code < 300:
-                return resp.json()
+                try:
+                    return resp.json()
+                except ValueError as exc:
+                    # Malformed/empty body on a 2xx (e.g. a truncated response or an HTML
+                    # proxy page served with a 200). Honor the client contract — callers
+                    # never see a bare decoding error — by mapping it to a mapped error.
+                    raise AccuWeatherApiError(f"Malformed JSON in AccuWeather response for {path}: {exc}") from exc
             if resp.status_code in (401, 403):
                 raise AuthError(self._describe(resp))
             if resp.status_code == 404:
