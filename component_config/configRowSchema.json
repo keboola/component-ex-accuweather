@@ -33,7 +33,7 @@
       "description": "City name to search.",
       "propertyOrder": 20,
       "options": {
-        "tooltip": "City name to search, e.g. Prague. Add a Country code to disambiguate.",
+        "tooltip": "City name to search, e.g. Prague. Add a Country code to disambiguate. This value resolves automatically at run time; use Confirm location below to pin an exact match.",
         "dependencies": {
           "location_type": "city"
         }
@@ -45,7 +45,7 @@
       "description": "Postal/ZIP code to look up.",
       "propertyOrder": 20,
       "options": {
-        "tooltip": "Postal/ZIP code, e.g. 11000. A Country code is required for postal lookup.",
+        "tooltip": "Postal/ZIP code, e.g. 11000. A Country code is required for postal lookup. This value resolves automatically at run time; use Confirm location below to pin an exact match.",
         "dependencies": {
           "location_type": "postal_code"
         }
@@ -76,6 +76,42 @@
             "postal_code",
             "location_key"
           ]
+        }
+      }
+    },
+    "city_location_key": {
+      "type": "string",
+      "title": "Confirm location",
+      "format": "select",
+      "enum": [],
+      "description": "Optional: pick the exact place to confirm it.",
+      "propertyOrder": 35,
+      "options": {
+        "tooltip": "Type a City name (and optional Country code) above, then click Search locations to confirm the exact place. Leave empty to resolve the city name automatically at run time.",
+        "async": {
+          "label": "Search locations",
+          "action": "search_locations"
+        },
+        "dependencies": {
+          "location_type": "city"
+        }
+      }
+    },
+    "postal_location_key": {
+      "type": "string",
+      "title": "Confirm location",
+      "format": "select",
+      "enum": [],
+      "description": "Optional: pick the exact place to confirm it.",
+      "propertyOrder": 35,
+      "options": {
+        "tooltip": "Enter the Postal code and Country code above, then click Search locations to confirm the exact place. Leave empty to resolve the postal code automatically at run time.",
+        "async": {
+          "label": "Search locations",
+          "action": "search_locations"
+        },
+        "dependencies": {
+          "location_type": "postal_code"
         }
       }
     },

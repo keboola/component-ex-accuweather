@@ -62,6 +62,22 @@ def test_search_locations_reads_location_search_in_location_key_mode(monkeypatch
     c._client.search_cities.assert_called_once_with("Prague", "CZ")
 
 
+def test_search_locations_postal_mode_uses_postal_endpoint(monkeypatch):
+    # postal_code mode drives the confirmation picker off the postal-codes endpoint.
+    c = _make(
+        monkeypatch,
+        {"#api_key": "K", "location_type": "postal_code", "postal_query": "10001", "country_code": "US"},
+    )
+    c._client.search_postal_codes.return_value = [
+        {"Key": "349727", "LocalizedName": "New York", "Country": {"LocalizedName": "United States"}}
+    ]
+    out = c.search_locations()
+    assert out[0].value == "349727"
+    assert "New York" in out[0].label
+    c._client.search_postal_codes.assert_called_once_with("10001", "US")
+    c._client.search_cities.assert_not_called()
+
+
 def test_search_locations_no_query_raises(monkeypatch):
     # location_key mode with no location_search term -> nothing to search on
     c = _make(monkeypatch, {"#api_key": "K", "location_type": "location_key", "location_key": "1"})

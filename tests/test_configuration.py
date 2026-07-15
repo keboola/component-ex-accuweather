@@ -62,6 +62,25 @@ def test_postal_ok_with_postal_query_and_country_code():
     assert cfg.search_query == "10001"
 
 
+def test_city_picker_key_satisfies_validation_without_query():
+    # A picker-confirmed key alone is a valid city location (UI confirmation path).
+    cfg = Configuration(**{"#api_key": "K", "location_type": "city", "city_location_key": "125594"})
+    cfg.validate_location()  # must not raise
+    assert cfg.picked_location_key == "125594"
+
+
+def test_postal_picker_key_satisfies_validation_without_country_code():
+    # A picker-confirmed key alone is valid; country_code is only needed for free-text postal lookup.
+    cfg = Configuration(**{"#api_key": "K", "location_type": "postal_code", "postal_location_key": "349727"})
+    cfg.validate_location()  # must not raise
+    assert cfg.picked_location_key == "349727"
+
+
+def test_picked_location_key_none_outside_city_postal():
+    cfg = Configuration(**{"#api_key": "K", "location_type": "location_key", "location_key": "1"})
+    assert cfg.picked_location_key is None
+
+
 def test_metric_property():
     metric_cfg = Configuration(**{"#api_key": "K", "location_type": "location_key", "location_key": "1"})
     assert metric_cfg.metric is True

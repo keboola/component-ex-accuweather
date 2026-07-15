@@ -59,6 +59,23 @@ def test_direct_location_key_skips_resolution(monkeypatch):
     c._client.search_cities.assert_not_called()
 
 
+def test_city_picker_key_skips_search(monkeypatch):
+    # A picker-confirmed key in city mode is authoritative: no search, no state lookup.
+    cfg = {"#api_key": "K", "location_type": "city", "city_query": "Prague", "city_location_key": "125594"}
+    c = _make_component(monkeypatch, cfg, {})
+    assert c._resolve_location_key() == "125594"
+    c._client.search_cities.assert_not_called()
+    c.write_state_file.assert_not_called()
+
+
+def test_postal_picker_key_skips_search(monkeypatch):
+    cfg = {"#api_key": "K", "location_type": "postal_code", "postal_location_key": "349727"}
+    c = _make_component(monkeypatch, cfg, {})
+    assert c._resolve_location_key() == "349727"
+    c._client.search_postal_codes.assert_not_called()
+    c.write_state_file.assert_not_called()
+
+
 def test_empty_city_result_raises_userexception(monkeypatch):
     cfg = {"#api_key": "K", "location_type": "city", "city_query": "Nowhere"}
     c = _make_component(monkeypatch, cfg, {})

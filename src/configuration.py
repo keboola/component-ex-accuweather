@@ -54,6 +54,11 @@ class Configuration(BaseModel):
     latitude: float | None = None
     longitude: float | None = None
     location_key: str | None = None
+    # Optional keys committed by the config-time confirmation picker in city / postal modes.
+    # UI-only add-on: when set they pin the exact place; when empty the free-text query resolves
+    # at runtime exactly as before (headless configs never populate these).
+    city_location_key: str | None = None
+    postal_location_key: str | None = None
 
     datasets: list[Dataset] = Field(default_factory=lambda: [Dataset.current_conditions])
     daily_range: DailyRange = DailyRange.five
@@ -76,12 +81,14 @@ class Configuration(BaseModel):
         does not wrap it and the ``except ValidationError`` above never catches it).
         """
         lt = self.location_type
-        if lt == LocationType.city and not self.city_query:
+        if lt == LocationType.city and not (self.city_query or self.city_location_key):
             raise UserException("city_query is required when location_type is 'city'.")
         if lt == LocationType.postal_code:
-            if not self.postal_query:
+            # A picker-confirmed key stands on its own; the free-text path still needs both
+            # the postal code and a country code (unchanged headless behaviour).
+            if not (self.postal_query or self.postal_location_key):
                 raise UserException("postal_query is required when location_type is 'postal_code'.")
-            if not self.country_code:
+            if self.postal_query and not self.postal_location_key and not self.country_code:
                 raise UserException("country_code is required when location_type is 'postal_code'.")
         if lt == LocationType.geoposition and (self.latitude is None or self.longitude is None):
             raise UserException("latitude and longitude are required for geoposition.")
@@ -99,6 +106,19 @@ class Configuration(BaseModel):
             return self.postal_query
         if self.location_type == LocationType.location_key:
             return self.location_search
+        return None
+
+    @property
+    def picked_location_key(self) -> str | None:
+        """Location key confirmed via the config-time picker (city / postal modes only).
+
+        None for headless configs and modes without a picker, so the runtime resolver
+        falls back to free-text search exactly as before.
+        """
+        if self.location_type == LocationType.city:
+            return self.city_location_key
+        if self.location_type == LocationType.postal_code:
+            return self.postal_location_key
         return None
 
     @property

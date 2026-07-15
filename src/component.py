@@ -116,6 +116,7 @@ class Component(ComponentBase):
         raw = (
             f"{cfg.location_type}|{cfg.city_query}|{cfg.postal_query}|{cfg.location_search}"
             f"|{cfg.country_code}|{cfg.latitude}|{cfg.longitude}|{cfg.location_key}"
+            f"|{cfg.city_location_key}|{cfg.postal_location_key}"
         )
         return hashlib.sha256(raw.encode()).hexdigest()
 
@@ -124,6 +125,13 @@ class Component(ComponentBase):
         if cfg.location_type == LocationType.location_key:
             assert cfg.location_key is not None  # guaranteed by validate_location()
             return cfg.location_key
+
+        # A key confirmed via the config-time picker (city / postal modes) is authoritative:
+        # use it directly, skipping the free-text search. Headless configs never set this,
+        # so they fall through to the search path below unchanged.
+        if cfg.picked_location_key:
+            logging.info("Using picker-confirmed locationKey %s", cfg.picked_location_key)
+            return cfg.picked_location_key
 
         state = self.get_state_file() or {}
         if state.get(_STATE_KEY) and state.get(_STATE_RESOLVED_FROM) == self._resolved_from():
@@ -204,13 +212,18 @@ class Component(ComponentBase):
 
     @sync_action("search_locations")
     def search_locations(self) -> list[SelectElement]:
-        # Read whichever query field is present in the active mode (city_query /
-        # postal_query / location_search); the picker itself only renders in location_key mode.
-        q = self._config.search_query
+        # Mode-aware confirmation picker. Reads the query field committed by the active mode
+        # (city_query / postal_query / location_search) and hits the matching endpoint:
+        # postal_code mode searches postal codes, every other mode searches cities.
+        cfg = self._config
+        q = cfg.search_query
         if not q:
             raise UserException("Enter a location query to search.")
         try:
-            matches = self._client.search_cities(q, self._config.country_code)
+            if cfg.location_type == LocationType.postal_code:
+                matches = self._client.search_postal_codes(q, cfg.country_code)
+            else:
+                matches = self._client.search_cities(q, cfg.country_code)
         except (AccuWeatherApiError, ValueError) as exc:
             raise UserException(f"Location search failed: {exc}") from exc
         elements = []

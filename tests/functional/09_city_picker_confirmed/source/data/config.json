@@ -1,0 +1,14 @@
+{
+  "action": "run",
+  "parameters": {
+    "#api_key": "DUMMY_KEY",
+    "units": "metric",
+    "include_details": true,
+    "location_type": "city",
+    "city_query": "Prague",
+    "city_location_key": "125594",
+    "datasets": [
+      "current_conditions"
+    ]
+  }
+}
