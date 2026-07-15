@@ -9,7 +9,7 @@
       "type": "string",
       "title": "API Key",
       "format": "password",
-      "description": "Your AccuWeather developer API key.",
+      "description": "Your AccuWeather developer API key. Create one at the <a href='https://developer.accuweather.com' target='_blank'>AccuWeather developer portal</a>.",
       "propertyOrder": 10,
       "options": {
         "tooltip": "Create a developer account at developer.accuweather.com, add an app, and copy its API key. The key is sent as a Bearer token on every request."

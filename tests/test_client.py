@@ -178,6 +178,49 @@ def test_408_is_retried():
         assert m.call_count == 2
 
 
+def test_521_is_retried():
+    # 521 (and any 5xx) is now part of the transient set and must be retried.
+    c = AccuWeatherClient("KEY", max_retries=2, backoff_base=0)
+    with requests_mock.Mocker() as m:
+        m.get(
+            f"{BASE}/currentconditions/v1/125594",
+            [{"status_code": 521, "json": {}}, {"status_code": 200, "json": [{"WeatherText": "Sunny"}]}],
+        )
+        out = c.get_current_conditions("125594", details=True)
+        assert out[0]["WeatherText"] == "Sunny"
+        assert m.call_count == 2
+
+
+def test_521_exhaustion_maps_to_api_error():
+    c = AccuWeatherClient("KEY", max_retries=1, backoff_base=0)
+    with requests_mock.Mocker() as m:
+        m.get(f"{BASE}/currentconditions/v1/125594", status_code=521, json={})
+        with pytest.raises(AccuWeatherApiError):
+            c.get_current_conditions("125594", details=True)
+        assert m.call_count == 2  # initial + 1 retry
+
+
+def test_429_exhaustion_maps_to_rate_limit_error():
+    c = AccuWeatherClient("KEY", max_retries=1, backoff_base=0)
+    with requests_mock.Mocker() as m:
+        m.get(f"{BASE}/currentconditions/v1/125594", status_code=429, json={})
+        with pytest.raises(RateLimitError):
+            c.get_current_conditions("125594", details=True)
+        assert m.call_count == 2  # initial + 1 retry
+
+
+def test_network_error_is_retried_then_succeeds():
+    c = AccuWeatherClient("KEY", max_retries=2, backoff_base=0)
+    with requests_mock.Mocker() as m:
+        m.get(
+            f"{BASE}/currentconditions/v1/125594",
+            [{"exc": requests.exceptions.ConnectTimeout}, {"status_code": 200, "json": [{"WeatherText": "Sunny"}]}],
+        )
+        out = c.get_current_conditions("125594", details=True)
+        assert out[0]["WeatherText"] == "Sunny"
+        assert m.call_count == 2
+
+
 def test_typed_errors_are_api_error_subclasses():
     assert issubclass(AuthError, AccuWeatherApiError)
     assert issubclass(LocationNotFoundError, AccuWeatherApiError)

@@ -78,7 +78,7 @@
       "description": "Postal/ZIP code to look up.",
       "propertyOrder": 20,
       "options": {
-        "tooltip": "Type a postal/ZIP code, e.g. 11000; a Country code below is required. Then use Find & confirm location to pin the exact place, or leave it empty to resolve automatically at run time.",
+        "tooltip": "Type the postal/ZIP code in its national format — for many countries that includes a space (e.g. 110 00 for CZ, SW1A 1AA for GB), none for others (e.g. 10001 for US). A Country Code below is required. Then use Find & confirm location to pin the exact place, or leave it empty to resolve automatically at run time.",
         "dependencies": {
           "location_type": "postal_code"
         }
@@ -312,7 +312,7 @@
         "indices_ids": {
           "type": "array",
           "title": "Indices Filter",
-          "description": "Optional. Leave empty to output all indices, or list the AccuWeather index IDs to keep (e.g. 1, 5, 26). See the full index list at https://developer.accuweather.com/documentation/indices",
+          "description": "Optional. Leave empty to output all indices, or list the AccuWeather index IDs to keep (e.g. 1, 5, 26). See the <a href='https://developer.accuweather.com/documentation/indices' target='_blank'>AccuWeather index list</a>.",
           "propertyOrder": 110,
           "items": {
             "type": "integer",

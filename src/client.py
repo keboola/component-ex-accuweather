@@ -1,15 +1,36 @@
 import logging
-import time
 from typing import Any
 
 import requests
+from tenacity import (
+    Retrying,
+    before_sleep_log,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_exponential_jitter,
+    wait_none,
+)
 
 BASE_URL = "https://dataservice.accuweather.com"
-_RETRY_STATUSES = {408, 429, 500, 502, 503, 504}
 _REQUEST_TIMEOUT = 60
 _MAX_ERROR_BODY = 200
 
 LOG = logging.getLogger(__name__)
+
+
+def _is_transient_status(status: int) -> bool:
+    # Full transient set: every 5xx (500–599, so 521 "web server down" too) plus
+    # 408 (request timeout) and 429 (rate limit). These are retried; everything
+    # else (4xx auth/not-found/unmapped) is terminal.
+    return 500 <= status <= 599 or status in (408, 429)
+
+
+class _TransientHTTPError(Exception):
+    """Internal marker for a retryable HTTP status; carries the response for mapping."""
+
+    def __init__(self, response: requests.Response) -> None:
+        super().__init__(f"transient HTTP {response.status_code}")
+        self.response = response
 
 
 class AccuWeatherApiError(Exception):
@@ -58,15 +79,9 @@ class AccuWeatherClient:
 
     def _get(self, path: str, params: dict[str, Any] | None = None) -> Any:
         url = f"{self._base_url}{path}"
-        last_status = None
-        for attempt in range(self._max_retries + 1):
-            try:
-                resp = self._session.get(url, params=params, timeout=_REQUEST_TIMEOUT)
-            except requests.RequestException as exc:
-                # Timeouts, connection errors, SSL failures — a transient upstream
-                # fault, not a component bug. Surface as a mapped (exit-1) error.
-                raise AccuWeatherApiError(f"Network error calling AccuWeather {path}: {exc}") from exc
-            last_status = resp.status_code
+
+        def _attempt() -> Any:
+            resp = self._session.get(url, params=params, timeout=_REQUEST_TIMEOUT)
             if 200 <= resp.status_code < 300:
                 try:
                     return resp.json()
@@ -79,26 +94,36 @@ class AccuWeatherClient:
                 raise AuthError(self._describe(resp))
             if resp.status_code == 404:
                 raise LocationNotFoundError(self._describe(resp))
-            if resp.status_code in _RETRY_STATUSES:
-                if attempt < self._max_retries:
-                    backoff = self._backoff_base * (2**attempt)
-                    LOG.debug(
-                        "AccuWeather %s returned %s; retrying in %.1fs (attempt %d/%d)",
-                        path,
-                        resp.status_code,
-                        backoff,
-                        attempt + 1,
-                        self._max_retries,
-                    )
-                    time.sleep(backoff)
-                    continue
-                LOG.warning("AccuWeather %s failed with %s after %d retries", path, resp.status_code, self._max_retries)
-                if resp.status_code == 429:
-                    raise RateLimitError(self._describe(resp))
-                raise AccuWeatherApiError(self._describe(resp))
+            if _is_transient_status(resp.status_code):
+                # Retryable: re-raised by tenacity until retries are exhausted, then
+                # mapped to RateLimitError (429) / AccuWeatherApiError below.
+                raise _TransientHTTPError(resp)
             # Any other unmapped status (400/405/422/...): terminal, map to base error.
             raise AccuWeatherApiError(self._describe(resp))
-        raise AccuWeatherApiError(f"Unreachable retry loop, last status {last_status}")
+
+        # Retry the full transient set — transient HTTP statuses and network faults
+        # (timeouts, connection/SSL errors). Backoff is exponential-with-jitter, or
+        # instant when backoff_base == 0 (keeps tests fast).
+        wait = wait_exponential_jitter(initial=self._backoff_base) if self._backoff_base else wait_none()
+        retryer = Retrying(
+            retry=retry_if_exception_type((_TransientHTTPError, requests.RequestException)),
+            wait=wait,
+            stop=stop_after_attempt(self._max_retries + 1),
+            before_sleep=before_sleep_log(LOG, logging.DEBUG),
+            reraise=True,
+        )
+        try:
+            return retryer(_attempt)
+        except _TransientHTTPError as exc:
+            resp = exc.response
+            LOG.warning("AccuWeather %s failed with %s after %d retries", path, resp.status_code, self._max_retries)
+            if resp.status_code == 429:
+                raise RateLimitError(self._describe(resp)) from exc
+            raise AccuWeatherApiError(self._describe(resp)) from exc
+        except requests.RequestException as exc:
+            # Timeouts, connection errors, SSL failures — a transient upstream fault,
+            # not a component bug. Surface as a mapped (exit-1) error after retries.
+            raise AccuWeatherApiError(f"Network error calling AccuWeather {path}: {exc}") from exc
 
     @staticmethod
     def _describe(resp: requests.Response) -> str:

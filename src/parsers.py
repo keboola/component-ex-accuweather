@@ -127,6 +127,24 @@ def _dig(d: dict[str, Any] | None, *keys: str) -> Any:
     return cur
 
 
+# A column spec maps output column -> source path. A string path is a top-level
+# ``.get``; a tuple is a nested lookup via ``_dig``. This keeps the flatteners a
+# declarative column->path table instead of a large repeated dict literal.
+_Path = str | tuple[str, ...]
+
+
+def _extract(d: dict[str, Any], path: _Path) -> Any:
+    if isinstance(path, tuple):
+        return _dig(d, *path)
+    return d.get(path)
+
+
+def _map_row(d: dict[str, Any], spec: dict[str, _Path], **extra: Any) -> dict[str, Any]:
+    row = {col: _extract(d, path) for col, path in spec.items()}
+    row.update(extra)
+    return row
+
+
 def _air_and_pollen(d: dict[str, Any], name: str, key: str = "Value") -> Any:
     # daily details expose UV / air-quality / pollen as a flat list of named entries;
     # pull one entry by its Name and return the requested sub-field (Value or Category).
@@ -142,35 +160,30 @@ def flatten_current_conditions(
     # currentconditions has no metric= query param — the payload always carries both
     # Metric and Imperial sub-objects, so honor the configured units here in the parser.
     units = "Metric" if metric else "Imperial"
-    rows = []
-    for o in payload:
-        rows.append(
-            {
-                "location_key": location_key,
-                "observation_datetime": o.get("LocalObservationDateTime"),
-                "epoch_time": o.get("EpochTime"),
-                "weather_text": o.get("WeatherText"),
-                "weather_icon": o.get("WeatherIcon"),
-                "has_precipitation": o.get("HasPrecipitation"),
-                "precipitation_type": o.get("PrecipitationType"),
-                "is_day_time": o.get("IsDayTime"),
-                "temperature": _dig(o, "Temperature", units, "Value"),
-                "temperature_unit": _dig(o, "Temperature", units, "Unit"),
-                "realfeel_temperature": _dig(o, "RealFeelTemperature", units, "Value"),
-                "relative_humidity": o.get("RelativeHumidity"),
-                "wind_speed": _dig(o, "Wind", "Speed", units, "Value"),
-                "wind_direction_degrees": _dig(o, "Wind", "Direction", "Degrees"),
-                "wind_direction": _dig(o, "Wind", "Direction", "Localized"),
-                "uv_index": o.get("UVIndex"),
-                "uv_index_text": o.get("UVIndexText"),
-                "visibility": _dig(o, "Visibility", units, "Value"),
-                "cloud_cover": o.get("CloudCover"),
-                "pressure": _dig(o, "Pressure", units, "Value"),
-                "link": o.get("Link"),
-                "mobile_link": o.get("MobileLink"),
-            }
-        )
-    return rows
+    spec: dict[str, _Path] = {
+        "observation_datetime": "LocalObservationDateTime",
+        "epoch_time": "EpochTime",
+        "weather_text": "WeatherText",
+        "weather_icon": "WeatherIcon",
+        "has_precipitation": "HasPrecipitation",
+        "precipitation_type": "PrecipitationType",
+        "is_day_time": "IsDayTime",
+        "temperature": ("Temperature", units, "Value"),
+        "temperature_unit": ("Temperature", units, "Unit"),
+        "realfeel_temperature": ("RealFeelTemperature", units, "Value"),
+        "relative_humidity": "RelativeHumidity",
+        "wind_speed": ("Wind", "Speed", units, "Value"),
+        "wind_direction_degrees": ("Wind", "Direction", "Degrees"),
+        "wind_direction": ("Wind", "Direction", "Localized"),
+        "uv_index": "UVIndex",
+        "uv_index_text": "UVIndexText",
+        "visibility": ("Visibility", units, "Value"),
+        "cloud_cover": "CloudCover",
+        "pressure": ("Pressure", units, "Value"),
+        "link": "Link",
+        "mobile_link": "MobileLink",
+    }
+    return [_map_row(o, spec, location_key=location_key) for o in payload]
 
 
 def flatten_daily_forecast(location_key: str, payload: dict[str, Any]) -> list[dict[str, Any]]:
@@ -180,64 +193,76 @@ def flatten_daily_forecast(location_key: str, payload: dict[str, Any]) -> list[d
     # Detail-only fields (realfeel, day/night wind, thunderstorm/rain probability, hours of
     # sun, UV / air quality) are present only when details=true; they resolve to None (empty)
     # otherwise, exactly like the current-conditions detail columns.
+    spec: dict[str, _Path] = {
+        "forecast_date": "Date",
+        "epoch_date": "EpochDate",
+        "temperature_min": ("Temperature", "Minimum", "Value"),
+        "temperature_max": ("Temperature", "Maximum", "Value"),
+        "temperature_unit": ("Temperature", "Maximum", "Unit"),
+        "day_icon": ("Day", "Icon"),
+        "day_phrase": ("Day", "IconPhrase"),
+        "day_precipitation_probability": ("Day", "PrecipitationProbability"),
+        "day_has_precipitation": ("Day", "HasPrecipitation"),
+        "night_icon": ("Night", "Icon"),
+        "night_phrase": ("Night", "IconPhrase"),
+        "night_precipitation_probability": ("Night", "PrecipitationProbability"),
+        "sun_rise": ("Sun", "Rise"),
+        "sun_set": ("Sun", "Set"),
+        # detail-only fields (details=true)
+        "realfeel_temperature_min": ("RealFeelTemperature", "Minimum", "Value"),
+        "realfeel_temperature_max": ("RealFeelTemperature", "Maximum", "Value"),
+        "hours_of_sun": "HoursOfSun",
+        "day_wind_speed": ("Day", "Wind", "Speed", "Value"),
+        "day_wind_direction": ("Day", "Wind", "Direction", "Localized"),
+        "day_wind_direction_degrees": ("Day", "Wind", "Direction", "Degrees"),
+        "day_thunderstorm_probability": ("Day", "ThunderstormProbability"),
+        "day_rain_probability": ("Day", "RainProbability"),
+        "night_wind_speed": ("Night", "Wind", "Speed", "Value"),
+        "night_wind_direction": ("Night", "Wind", "Direction", "Localized"),
+        "night_wind_direction_degrees": ("Night", "Wind", "Direction", "Degrees"),
+        "night_thunderstorm_probability": ("Night", "ThunderstormProbability"),
+        "night_rain_probability": ("Night", "RainProbability"),
+        "link": "Link",
+        "mobile_link": "MobileLink",
+    }
     rows = []
     for d in payload.get("DailyForecasts", []):
+        # air-and-pollen entries aren't a fixed path (looked up by Name), so they
+        # stay as explicit extras alongside the declarative column->path spec.
         rows.append(
-            {
-                "location_key": location_key,
-                "forecast_date": d.get("Date"),
-                "epoch_date": d.get("EpochDate"),
-                "temperature_min": _dig(d, "Temperature", "Minimum", "Value"),
-                "temperature_max": _dig(d, "Temperature", "Maximum", "Value"),
-                "temperature_unit": _dig(d, "Temperature", "Maximum", "Unit"),
-                "day_icon": _dig(d, "Day", "Icon"),
-                "day_phrase": _dig(d, "Day", "IconPhrase"),
-                "day_precipitation_probability": _dig(d, "Day", "PrecipitationProbability"),
-                "day_has_precipitation": _dig(d, "Day", "HasPrecipitation"),
-                "night_icon": _dig(d, "Night", "Icon"),
-                "night_phrase": _dig(d, "Night", "IconPhrase"),
-                "night_precipitation_probability": _dig(d, "Night", "PrecipitationProbability"),
-                "sun_rise": _dig(d, "Sun", "Rise"),
-                "sun_set": _dig(d, "Sun", "Set"),
-                # detail-only fields (details=true)
-                "realfeel_temperature_min": _dig(d, "RealFeelTemperature", "Minimum", "Value"),
-                "realfeel_temperature_max": _dig(d, "RealFeelTemperature", "Maximum", "Value"),
-                "hours_of_sun": d.get("HoursOfSun"),
-                "day_wind_speed": _dig(d, "Day", "Wind", "Speed", "Value"),
-                "day_wind_direction": _dig(d, "Day", "Wind", "Direction", "Localized"),
-                "day_wind_direction_degrees": _dig(d, "Day", "Wind", "Direction", "Degrees"),
-                "day_thunderstorm_probability": _dig(d, "Day", "ThunderstormProbability"),
-                "day_rain_probability": _dig(d, "Day", "RainProbability"),
-                "night_wind_speed": _dig(d, "Night", "Wind", "Speed", "Value"),
-                "night_wind_direction": _dig(d, "Night", "Wind", "Direction", "Localized"),
-                "night_wind_direction_degrees": _dig(d, "Night", "Wind", "Direction", "Degrees"),
-                "night_thunderstorm_probability": _dig(d, "Night", "ThunderstormProbability"),
-                "night_rain_probability": _dig(d, "Night", "RainProbability"),
-                "uv_index": _air_and_pollen(d, "UVIndex", "Value"),
-                "uv_index_category": _air_and_pollen(d, "UVIndex", "Category"),
-                "air_quality_category": _air_and_pollen(d, "AirQuality", "Category"),
-                "link": d.get("Link"),
-                "mobile_link": d.get("MobileLink"),
-            }
+            _map_row(
+                d,
+                spec,
+                location_key=location_key,
+                uv_index=_air_and_pollen(d, "UVIndex", "Value"),
+                uv_index_category=_air_and_pollen(d, "UVIndex", "Category"),
+                air_quality_category=_air_and_pollen(d, "AirQuality", "Category"),
+            )
         )
     return rows
 
 
 def flatten_indices(location_key: str, payload: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    spec: dict[str, _Path] = {
+        "index_id": "ID",
+        "index_name": "Name",
+        "value": "Value",
+        "category": "Category",
+        "category_value": "CategoryValue",
+        "text": "Text",
+        "ascending": "Ascending",
+    }
     rows = []
     for i in payload:
+        # `date` prefers LocalDateTime, falling back to the epoch converted to an
+        # ISO timestamp — not a plain path, so it stays an explicit extra.
         rows.append(
-            {
-                "location_key": location_key,
-                "index_id": i.get("ID"),
-                "index_name": i.get("Name"),
-                "date": i.get("LocalDateTime") or _epoch_to_iso(i.get("EpochDateTime")),
-                "value": i.get("Value"),
-                "category": i.get("Category"),
-                "category_value": i.get("CategoryValue"),
-                "text": i.get("Text"),
-                "ascending": i.get("Ascending"),
-            }
+            _map_row(
+                i,
+                spec,
+                location_key=location_key,
+                date=i.get("LocalDateTime") or _epoch_to_iso(i.get("EpochDateTime")),
+            )
         )
     return rows
 
@@ -248,35 +273,30 @@ def flatten_hourly_forecast(location_key: str, payload: list[dict[str, Any]]) ->
     # sub-objects). Detail-only fields (realfeel, wind, humidity, dew point, UV, visibility,
     # cloud cover, precipitation type/intensity) appear only when details=true and resolve to
     # None (empty) otherwise, matching the current-conditions detail-column pattern.
-    rows = []
-    for h in payload:
-        rows.append(
-            {
-                "location_key": location_key,
-                "forecast_datetime": h.get("DateTime"),
-                "epoch_datetime": h.get("EpochDateTime"),
-                "weather_icon": h.get("WeatherIcon"),
-                "icon_phrase": h.get("IconPhrase"),
-                "is_daylight": h.get("IsDaylight"),
-                "temperature": _dig(h, "Temperature", "Value"),
-                "temperature_unit": _dig(h, "Temperature", "Unit"),
-                "precipitation_probability": h.get("PrecipitationProbability"),
-                "has_precipitation": h.get("HasPrecipitation"),
-                # detail-only fields (details=true)
-                "realfeel_temperature": _dig(h, "RealFeelTemperature", "Value"),
-                "wind_speed": _dig(h, "Wind", "Speed", "Value"),
-                "wind_direction": _dig(h, "Wind", "Direction", "Localized"),
-                "wind_direction_degrees": _dig(h, "Wind", "Direction", "Degrees"),
-                "relative_humidity": h.get("RelativeHumidity"),
-                "dew_point": _dig(h, "DewPoint", "Value"),
-                "uv_index": h.get("UVIndex"),
-                "uv_index_text": h.get("UVIndexText"),
-                "visibility": _dig(h, "Visibility", "Value"),
-                "cloud_cover": h.get("CloudCover"),
-                "precipitation_type": h.get("PrecipitationType"),
-                "rain": _dig(h, "Rain", "Value"),
-                "link": h.get("Link"),
-                "mobile_link": h.get("MobileLink"),
-            }
-        )
-    return rows
+    spec: dict[str, _Path] = {
+        "forecast_datetime": "DateTime",
+        "epoch_datetime": "EpochDateTime",
+        "weather_icon": "WeatherIcon",
+        "icon_phrase": "IconPhrase",
+        "is_daylight": "IsDaylight",
+        "temperature": ("Temperature", "Value"),
+        "temperature_unit": ("Temperature", "Unit"),
+        "precipitation_probability": "PrecipitationProbability",
+        "has_precipitation": "HasPrecipitation",
+        # detail-only fields (details=true)
+        "realfeel_temperature": ("RealFeelTemperature", "Value"),
+        "wind_speed": ("Wind", "Speed", "Value"),
+        "wind_direction": ("Wind", "Direction", "Localized"),
+        "wind_direction_degrees": ("Wind", "Direction", "Degrees"),
+        "relative_humidity": "RelativeHumidity",
+        "dew_point": ("DewPoint", "Value"),
+        "uv_index": "UVIndex",
+        "uv_index_text": "UVIndexText",
+        "visibility": ("Visibility", "Value"),
+        "cloud_cover": "CloudCover",
+        "precipitation_type": "PrecipitationType",
+        "rain": ("Rain", "Value"),
+        "link": "Link",
+        "mobile_link": "MobileLink",
+    }
+    return [_map_row(h, spec, location_key=location_key) for h in payload]
