@@ -25,6 +25,7 @@ from parsers import (
     flatten_hourly_forecast,
     flatten_indices,
 )
+from postal_formats import normalize_postal_code
 
 # VCR cassette sanitizers — picked up by the keboola.datadirtest scaffolder during
 # recording. keboola.vcr is a dev-only (test) dependency, absent in the production
@@ -163,7 +164,11 @@ class Component(ComponentBase):
             results = self._client.search_cities(cfg.city_query, cfg.country_code)
         elif cfg.location_type == LocationType.postal_code:
             assert cfg.postal_query is not None
-            results = self._client.search_postal_codes(cfg.postal_query, cfg.country_code)
+            # Normalize to the country's canonical format at call time (raw postal_query
+            # stays untouched in the config / state fingerprint) so a bare "11000" resolves
+            # for CZ just like the national "110 00".
+            query = normalize_postal_code(cfg.country_code, cfg.postal_query)
+            results = self._client.search_postal_codes(query, cfg.country_code)
         elif cfg.location_type == LocationType.geoposition:
             assert cfg.latitude is not None and cfg.longitude is not None
             geo = self._client.search_geoposition(cfg.latitude, cfg.longitude)
@@ -247,7 +252,9 @@ class Component(ComponentBase):
             raise UserException("Enter a location query to search.")
         try:
             if cfg.location_type == LocationType.postal_code:
-                matches = self._client.search_postal_codes(q, cfg.country_code)
+                # Same normalization as the extraction path so the picker resolves the
+                # same codes the run will (e.g. CZ "11000" -> "110 00").
+                matches = self._client.search_postal_codes(normalize_postal_code(cfg.country_code, q), cfg.country_code)
             else:
                 matches = self._client.search_cities(q, cfg.country_code)
         except (AccuWeatherApiError, ValueError) as exc:

@@ -60,7 +60,12 @@ Row-level (per location)
 -------
 - `location_type` — `city` (default), `postal_code`, `geoposition`, or `location_key`.
 - `city_query` — city name to search (`city` mode).
-- `postal_query` — postal/ZIP code to look up (`postal_code` mode; `country_code` required).
+- `postal_query` — postal/ZIP code to look up (`postal_code` mode; `country_code` required). The code is
+  normalized to the country's canonical format before the lookup, so both national and bare forms resolve
+  (e.g. Czech `11000` and `110 00` both work; UK `sw1a1aa` becomes `SW1A 1AA`). The raw value you enter is
+  kept as-is in the config; normalization happens only at request time. Countries without a separator in their
+  postal format (e.g. US ZIP) pass through unchanged. Templates are derived from the GeoNames
+  `postalCodeFormat` data.
 - `location_search` — free-text term for the `search_locations` sync action (`location_key` mode).
 - `country_code` — ISO 3166 2-letter country code to disambiguate city/postal search; required for postal lookup.
 - `city_location_key` / `postal_location_key` — optional key confirmed by the "Find & confirm location" picker

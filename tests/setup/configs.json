@@ -98,5 +98,22 @@
         }
       }
     }
+  },
+  {
+    "name": "10_postal_code_cz_normalized",
+    "description": "CZ postal_query '11000' is normalized to '110 00' before search_postal_codes -> resolves -> current_conditions, exit 0",
+    "config": {
+      "action": "run",
+      "parameters": {
+        "#api_key": "DUMMY_KEY",
+        "units": "metric",
+        "location_type": "postal_code",
+        "postal_query": "11000",
+        "country_code": "CZ",
+        "datasets": {
+          "current_conditions": true
+        }
+      }
+    }
   }
 ]

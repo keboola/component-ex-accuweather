@@ -1,0 +1,13 @@
+{
+  "action": "run",
+  "parameters": {
+    "#api_key": "DUMMY_KEY",
+    "units": "metric",
+    "location_type": "postal_code",
+    "postal_query": "11000",
+    "country_code": "CZ",
+    "datasets": {
+      "current_conditions": true
+    }
+  }
+}

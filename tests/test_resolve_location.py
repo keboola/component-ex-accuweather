@@ -52,6 +52,18 @@ def test_resolves_via_postal_code_search(monkeypatch):
     c._client.search_cities.assert_not_called()
 
 
+def test_postal_query_is_normalized_before_search(monkeypatch):
+    # CZ postal lookup: the bare "11000" is normalized to the national "110 00"
+    # before hitting search_postal_codes, while the raw stays in the config.
+    cfg = {"#api_key": "K", "location_type": "postal_code", "postal_query": "11000", "country_code": "CZ"}
+    c = _make_component(monkeypatch, cfg, {})
+    c._client.search_postal_codes.return_value = [{"Key": "125594"}]
+    assert c._resolve_location_key() == "125594"
+    c._client.search_postal_codes.assert_called_once_with("110 00", "CZ")
+    # raw query is untouched
+    assert c._config.postal_query == "11000"
+
+
 def test_direct_location_key_skips_resolution(monkeypatch):
     cfg = {"#api_key": "K", "location_type": "location_key", "location_key": "999"}
     c = _make_component(monkeypatch, cfg, {})
