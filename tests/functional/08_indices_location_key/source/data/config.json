@@ -5,9 +5,10 @@
     "language": "en-us",
     "location_type": "location_key",
     "location_key": "125594",
-    "datasets": [
-      "indices"
-    ],
-    "daily_range": 5
+    "datasets": {
+      "current_conditions": false,
+      "indices": true,
+      "indices_range": 5
+    }
   }
 }

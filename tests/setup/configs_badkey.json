@@ -9,7 +9,9 @@
         "location_type": "city",
         "city_query": "Prague",
         "country_code": "CZ",
-        "datasets": ["current_conditions"]
+        "datasets": {
+          "current_conditions": true
+        }
       }
     }
   },

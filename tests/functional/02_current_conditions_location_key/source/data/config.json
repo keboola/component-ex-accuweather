@@ -3,11 +3,11 @@
   "parameters": {
     "#api_key": "DUMMY_KEY",
     "units": "metric",
-    "include_details": true,
     "location_type": "location_key",
     "location_key": "125594",
-    "datasets": [
-      "current_conditions"
-    ]
+    "datasets": {
+      "current_conditions": true,
+      "current_conditions_details": true
+    }
   }
 }

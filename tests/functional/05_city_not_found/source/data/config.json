@@ -4,8 +4,8 @@
     "#api_key": "DUMMY_KEY",
     "location_type": "city",
     "city_query": "Zzxqwmvbnq123nowhere",
-    "datasets": [
-      "current_conditions"
-    ]
+    "datasets": {
+      "current_conditions": true
+    }
   }
 }

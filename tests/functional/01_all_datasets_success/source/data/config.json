@@ -4,16 +4,18 @@
     "#api_key": "DUMMY_KEY",
     "units": "metric",
     "language": "en-us",
-    "include_details": true,
     "location_type": "city",
     "city_query": "Prague",
     "country_code": "CZ",
-    "datasets": [
-      "current_conditions",
-      "daily_forecast",
-      "hourly_forecast"
-    ],
-    "daily_range": 5,
-    "hourly_range": 12
+    "datasets": {
+      "current_conditions": true,
+      "current_conditions_details": true,
+      "daily_forecast": true,
+      "daily_range": 5,
+      "daily_forecast_details": true,
+      "hourly_forecast": true,
+      "hourly_range": 12,
+      "hourly_forecast_details": true
+    }
   }
 }

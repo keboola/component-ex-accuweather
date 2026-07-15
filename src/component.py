@@ -10,7 +10,7 @@ from keboola.component.exceptions import UserException
 from keboola.component.sync_actions import SelectElement
 
 from client import AccuWeatherApiError, AccuWeatherClient
-from configuration import Configuration, Dataset, LocationType
+from configuration import Configuration, LocationType
 from parsers import (
     CURRENT_COLUMNS,
     CURRENT_PK,
@@ -101,13 +101,13 @@ class Component(ComponentBase):
         self._config.validate_location()
         location_key = self._resolve_location_key()
         datasets = self._config.datasets
-        if Dataset.current_conditions in datasets:
+        if datasets.current_conditions:
             self._extract_current_conditions(location_key)
-        if Dataset.daily_forecast in datasets:
+        if datasets.daily_forecast:
             self._extract_daily_forecast(location_key)
-        if Dataset.hourly_forecast in datasets:
+        if datasets.hourly_forecast:
             self._extract_hourly_forecast(location_key)
-        if Dataset.indices in datasets:
+        if datasets.indices:
             self._extract_indices(location_key)
 
     # --- location resolution -------------------------------------------------
@@ -164,7 +164,7 @@ class Component(ComponentBase):
     # --- dataset extraction --------------------------------------------------
     def _extract_current_conditions(self, key: str) -> None:
         payload = self._client.get_current_conditions(
-            key, details=self._config.include_details, language=self._config.language
+            key, details=self._config.datasets.current_conditions_details, language=self._config.language
         )
         rows = flatten_current_conditions(key, payload, metric=self._config.metric)
         self._write_table(TABLE_CURRENT, CURRENT_COLUMNS, CURRENT_PK, rows)
@@ -172,9 +172,9 @@ class Component(ComponentBase):
     def _extract_daily_forecast(self, key: str) -> None:
         payload = self._client.get_daily_forecast(
             key,
-            days=self._config.daily_range,
+            days=self._config.datasets.daily_range,
             metric=self._config.metric,
-            details=self._config.include_details,
+            details=self._config.datasets.daily_forecast_details,
             language=self._config.language,
         )
         rows = flatten_daily_forecast(key, payload)
@@ -183,9 +183,9 @@ class Component(ComponentBase):
     def _extract_hourly_forecast(self, key: str) -> None:
         payload = self._client.get_hourly_forecast(
             key,
-            hours=self._config.hourly_range,
+            hours=self._config.datasets.hourly_range,
             metric=self._config.metric,
-            details=self._config.include_details,
+            details=self._config.datasets.hourly_forecast_details,
             language=self._config.language,
         )
         rows = flatten_hourly_forecast(key, payload)
@@ -194,11 +194,24 @@ class Component(ComponentBase):
     def _extract_indices(self, key: str) -> None:
         payload = self._client.get_indices(
             key,
-            days=self._config.daily_range,
+            days=self._config.datasets.indices_range,
             language=self._config.language,
         )
         rows = flatten_indices(key, payload)
+        rows = self._filter_indices(rows)
         self._write_table(TABLE_INDICES, INDICES_COLUMNS, INDICES_PK, rows)
+
+    def _filter_indices(self, rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """Client-side filter: keep only the requested AccuWeather index IDs.
+
+        Empty / unset `indices_ids` means keep everything (no URL change — the
+        AccuWeather indices endpoint has no per-ID filter, so we fetch all and prune).
+        """
+        wanted = self._config.datasets.indices_ids
+        if not wanted:
+            return rows
+        wanted_set = set(wanted)
+        return [r for r in rows if r.get("index_id") in wanted_set]
 
     # --- sync actions --------------------------------------------------------
     @sync_action("testConnection")

@@ -2,8 +2,7 @@
   "type": "object",
   "title": "Location",
   "required": [
-    "location_type",
-    "datasets"
+    "location_type"
   ],
   "properties": {
     "location_type": {
@@ -157,85 +156,173 @@
       }
     },
     "datasets": {
-      "type": "array",
+      "type": "object",
       "title": "Datasets",
-      "format": "select",
-      "uniqueItems": true,
-      "default": [
-        "current_conditions"
-      ],
       "description": "Which weather datasets to pull for this location.",
       "propertyOrder": 70,
-      "items": {
-        "type": "string",
-        "enum": [
-          "current_conditions",
-          "daily_forecast",
-          "hourly_forecast",
-          "indices"
-        ],
-        "options": {
-          "enum_titles": [
-            "Current conditions",
-            "Daily forecast",
-            "Hourly forecast",
-            "Lifestyle indices"
-          ]
-        }
-      }
-    },
-    "daily_range": {
-      "type": "integer",
-      "title": "Daily Forecast Range",
-      "enum": [
-        1,
-        5,
-        10,
-        15
-      ],
-      "default": 5,
-      "description": "Number of forecast days to request.",
-      "propertyOrder": 80,
-      "options": {
-        "enum_titles": [
-          "1 day",
-          "5 days",
-          "10 days",
-          "15 days"
-        ],
-        "dependencies": {
-          "datasets": [
-            "daily_forecast",
-            "indices"
-          ]
-        }
-      }
-    },
-    "hourly_range": {
-      "type": "integer",
-      "title": "Hourly Forecast Range",
-      "enum": [
-        1,
-        12,
-        24,
-        72,
-        120
-      ],
-      "default": 12,
-      "description": "Number of forecast hours to request.",
-      "propertyOrder": 90,
-      "options": {
-        "enum_titles": [
-          "1 hour",
-          "12 hours",
-          "24 hours",
-          "72 hours",
-          "120 hours"
-        ],
-        "dependencies": {
-          "datasets": [
-            "hourly_forecast"
-          ]
+      "properties": {
+        "current_conditions": {
+          "type": "boolean",
+          "title": "Current conditions",
+          "format": "checkbox",
+          "default": true,
+          "description": "Latest observed conditions for the location.",
+          "propertyOrder": 10
+        },
+        "current_conditions_details": {
+          "type": "boolean",
+          "title": "Current conditions – include full details",
+          "format": "checkbox",
+          "default": false,
+          "description": "Fetch the extended detail fields for current conditions.",
+          "propertyOrder": 20,
+          "options": {
+            "tooltip": "Maps to the AccuWeather details=true parameter for the current conditions endpoint; populates extra detail columns.",
+            "dependencies": {
+              "current_conditions": true
+            }
+          }
+        },
+        "daily_forecast": {
+          "type": "boolean",
+          "title": "Daily forecast",
+          "format": "checkbox",
+          "default": false,
+          "description": "Multi-day daily forecast for the location.",
+          "propertyOrder": 30
+        },
+        "daily_range": {
+          "type": "integer",
+          "title": "Daily Forecast Range",
+          "enum": [
+            1,
+            5,
+            10,
+            15
+          ],
+          "default": 5,
+          "description": "Number of forecast days to request.",
+          "propertyOrder": 40,
+          "options": {
+            "enum_titles": [
+              "1 day",
+              "5 days",
+              "10 days",
+              "15 days"
+            ],
+            "dependencies": {
+              "daily_forecast": true
+            }
+          }
+        },
+        "daily_forecast_details": {
+          "type": "boolean",
+          "title": "Daily forecast – include full details",
+          "format": "checkbox",
+          "default": false,
+          "description": "Fetch the extended detail fields for the daily forecast.",
+          "propertyOrder": 50,
+          "options": {
+            "tooltip": "Maps to the AccuWeather details=true parameter for the daily forecast endpoint; populates extra detail columns.",
+            "dependencies": {
+              "daily_forecast": true
+            }
+          }
+        },
+        "hourly_forecast": {
+          "type": "boolean",
+          "title": "Hourly forecast",
+          "format": "checkbox",
+          "default": false,
+          "description": "Multi-hour hourly forecast for the location.",
+          "propertyOrder": 60
+        },
+        "hourly_range": {
+          "type": "integer",
+          "title": "Hourly Forecast Range",
+          "enum": [
+            1,
+            12,
+            24,
+            72,
+            120
+          ],
+          "default": 12,
+          "description": "Number of forecast hours to request.",
+          "propertyOrder": 70,
+          "options": {
+            "enum_titles": [
+              "1 hour",
+              "12 hours",
+              "24 hours",
+              "72 hours",
+              "120 hours"
+            ],
+            "dependencies": {
+              "hourly_forecast": true
+            }
+          }
+        },
+        "hourly_forecast_details": {
+          "type": "boolean",
+          "title": "Hourly forecast – include full details",
+          "format": "checkbox",
+          "default": false,
+          "description": "Fetch the extended detail fields for the hourly forecast.",
+          "propertyOrder": 80,
+          "options": {
+            "tooltip": "Maps to the AccuWeather details=true parameter for the hourly forecast endpoint; populates extra detail columns.",
+            "dependencies": {
+              "hourly_forecast": true
+            }
+          }
+        },
+        "indices": {
+          "type": "boolean",
+          "title": "Lifestyle indices",
+          "format": "checkbox",
+          "default": false,
+          "description": "Daily lifestyle indices for the location.",
+          "propertyOrder": 90
+        },
+        "indices_range": {
+          "type": "integer",
+          "title": "Indices Range",
+          "enum": [
+            1,
+            5,
+            10,
+            15
+          ],
+          "default": 5,
+          "description": "Number of days of indices to request.",
+          "propertyOrder": 100,
+          "options": {
+            "enum_titles": [
+              "1 day",
+              "5 days",
+              "10 days",
+              "15 days"
+            ],
+            "dependencies": {
+              "indices": true
+            }
+          }
+        },
+        "indices_ids": {
+          "type": "array",
+          "title": "Indices filter",
+          "description": "Optional: restrict output to specific AccuWeather index IDs.",
+          "propertyOrder": 110,
+          "items": {
+            "type": "integer"
+          },
+          "options": {
+            "tooltip": "Leave empty to output all indices. Otherwise list the AccuWeather index IDs to keep, e.g. 1, 5, 26. See the index list at https://developer.accuweather.com/apis (Indices API).",
+            "dependencies": {
+              "indices": true
+            }
+          }
         }
       }
     }

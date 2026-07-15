@@ -1,15 +1,20 @@
 import pytest
 from keboola.component.exceptions import UserException
 
-from configuration import Configuration, Dataset, Units
+from configuration import Configuration, Units
 
 
 def test_minimal_city_config():
     cfg = Configuration(**{"#api_key": "KEY", "location_type": "city", "city_query": "Prague"})
     assert cfg.api_key == "KEY"
     assert cfg.units == Units.metric
-    assert cfg.datasets == [Dataset.current_conditions]
-    assert cfg.include_details is True
+    # datasets defaults: current_conditions on, everything else off, details off
+    assert cfg.datasets.current_conditions is True
+    assert cfg.datasets.current_conditions_details is False
+    assert cfg.datasets.daily_forecast is False
+    assert cfg.datasets.hourly_forecast is False
+    assert cfg.datasets.indices is False
+    assert cfg.datasets.indices_ids is None
 
 
 def test_missing_api_key_raises_userexception():
@@ -96,26 +101,86 @@ def test_valid_ranges_accepted():
             "#api_key": "K",
             "location_type": "location_key",
             "location_key": "1",
-            "daily_range": 10,
-            "hourly_range": 72,
+            "datasets": {"daily_range": 10, "hourly_range": 72, "indices_range": 15},
         }
     )
-    assert cfg.daily_range == 10
-    assert cfg.hourly_range == 72
+    assert cfg.datasets.daily_range == 10
+    assert cfg.datasets.hourly_range == 72
+    assert cfg.datasets.indices_range == 15
 
 
 def test_out_of_range_daily_raises_userexception():
     with pytest.raises(UserException):
-        Configuration(**{"#api_key": "K", "location_type": "location_key", "location_key": "1", "daily_range": 7})
+        Configuration(
+            **{
+                "#api_key": "K",
+                "location_type": "location_key",
+                "location_key": "1",
+                "datasets": {"daily_range": 7},
+            }
+        )
 
 
 def test_out_of_range_hourly_raises_userexception():
     with pytest.raises(UserException):
-        Configuration(**{"#api_key": "K", "location_type": "location_key", "location_key": "1", "hourly_range": 48})
+        Configuration(
+            **{
+                "#api_key": "K",
+                "location_type": "location_key",
+                "location_key": "1",
+                "datasets": {"hourly_range": 48},
+            }
+        )
 
 
-def test_empty_datasets_rejected_by_validate_location():
-    # Empty datasets is constructible (sync actions need it) but must fail validate_location().
-    cfg = Configuration(**{"#api_key": "K", "location_type": "location_key", "location_key": "1", "datasets": []})
+def test_out_of_range_indices_raises_userexception():
+    with pytest.raises(UserException):
+        Configuration(
+            **{
+                "#api_key": "K",
+                "location_type": "location_key",
+                "location_key": "1",
+                "datasets": {"indices_range": 3},
+            }
+        )
+
+
+def test_no_dataset_selected_rejected_by_validate_location():
+    # All four toggles off is constructible (sync actions need it) but must fail validate_location().
+    cfg = Configuration(
+        **{
+            "#api_key": "K",
+            "location_type": "location_key",
+            "location_key": "1",
+            "datasets": {"current_conditions": False},
+        }
+    )
+    assert cfg.datasets.any_selected is False
     with pytest.raises(UserException):
         cfg.validate_location()
+
+
+def test_single_non_default_dataset_passes_validation():
+    # current_conditions off but indices on -> at least one selected -> valid.
+    cfg = Configuration(
+        **{
+            "#api_key": "K",
+            "location_type": "location_key",
+            "location_key": "1",
+            "datasets": {"current_conditions": False, "indices": True},
+        }
+    )
+    assert cfg.datasets.any_selected is True
+    cfg.validate_location()  # must not raise
+
+
+def test_indices_ids_parsed_as_int_list():
+    cfg = Configuration(
+        **{
+            "#api_key": "K",
+            "location_type": "location_key",
+            "location_key": "1",
+            "datasets": {"indices": True, "indices_ids": [1, 5, 26]},
+        }
+    )
+    assert cfg.datasets.indices_ids == [1, 5, 26]

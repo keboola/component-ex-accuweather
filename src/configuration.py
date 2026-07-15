@@ -31,11 +31,34 @@ class LocationType(StrEnum):
     location_key = "location_key"
 
 
-class Dataset(StrEnum):
-    current_conditions = "current_conditions"
-    daily_forecast = "daily_forecast"
-    hourly_forecast = "hourly_forecast"
-    indices = "indices"
+class DatasetsConfig(BaseModel):
+    """Nested per-dataset selection (mirrors the row schema's `datasets` object).
+
+    Each of the four dataset toggles is a boolean; the range / details / filter
+    sub-options are gated on the matching toggle in the UI but always constructible
+    here (defaults fill in when a toggle is off).
+    """
+
+    model_config = ConfigDict(extra="ignore", populate_by_name=True)
+
+    current_conditions: bool = True
+    current_conditions_details: bool = False
+
+    daily_forecast: bool = False
+    daily_range: DailyRange = DailyRange.five
+    daily_forecast_details: bool = False
+
+    hourly_forecast: bool = False
+    hourly_range: HourlyRange = HourlyRange.twelve
+    hourly_forecast_details: bool = False
+
+    indices: bool = False
+    indices_range: DailyRange = DailyRange.five
+    indices_ids: list[int] | None = None
+
+    @property
+    def any_selected(self) -> bool:
+        return self.current_conditions or self.daily_forecast or self.hourly_forecast or self.indices
 
 
 class Configuration(BaseModel):
@@ -44,7 +67,6 @@ class Configuration(BaseModel):
     api_key: str = Field(alias="#api_key")
     units: Units = Units.metric
     language: str = "en-us"
-    include_details: bool = True
 
     location_type: LocationType = LocationType.location_key
     city_query: str | None = None
@@ -60,9 +82,7 @@ class Configuration(BaseModel):
     city_location_key: str | None = None
     postal_location_key: str | None = None
 
-    datasets: list[Dataset] = Field(default_factory=lambda: [Dataset.current_conditions])
-    daily_range: DailyRange = DailyRange.five
-    hourly_range: HourlyRange = HourlyRange.twelve
+    datasets: DatasetsConfig = Field(default_factory=DatasetsConfig)
 
     def __init__(self, **data):
         try:
@@ -94,7 +114,7 @@ class Configuration(BaseModel):
             raise UserException("latitude and longitude are required for geoposition.")
         if lt == LocationType.location_key and not self.location_key:
             raise UserException("location_key is required when location_type is 'location_key'.")
-        if not self.datasets:
+        if not self.datasets.any_selected:
             raise UserException("Select at least one dataset to extract for this location.")
 
     @property

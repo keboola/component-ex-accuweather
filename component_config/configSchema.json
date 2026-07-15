@@ -46,16 +46,6 @@
       "options": {
         "tooltip": "AccuWeather language tag, e.g. en-us, es, fr, de. Defaults to en-us."
       }
-    },
-    "include_details": {
-      "type": "boolean",
-      "title": "Include Details",
-      "default": true,
-      "description": "Fetch additional detail fields for each dataset.",
-      "propertyOrder": 50,
-      "options": {
-        "tooltip": "Maps to the AccuWeather details=true/false parameter. When enabled, extra detail columns are populated."
-      }
     }
   }
 }

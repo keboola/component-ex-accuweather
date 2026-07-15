@@ -14,7 +14,7 @@ Functionality Notes
 ===================
 
 - One **config row per location**. Within a row you pick which datasets to pull via the
-  `datasets` multi-select.
+  `datasets` object — a toggle per dataset, each with its own range / details / filter sub-options.
 - The resolved `locationKey` is cached in the row's `state.json` (keyed by a hash of the location
   inputs) so a Locations API call is only spent when the inputs change — conserving the tight
   trial quota.
@@ -55,7 +55,6 @@ Config-level (root)
 - `#api_key` (secret, required) — AccuWeather API key.
 - `units` — `metric` (default) or `imperial`.
 - `language` — AccuWeather language code, default `en-us`.
-- `include_details` — include detail fields, default `true`.
 
 Row-level (per location)
 -------
@@ -69,9 +68,16 @@ Row-level (per location)
   free-text query above resolves at run time (headless configs leave these empty).
 - `latitude` / `longitude` — for `geoposition`.
 - `location_key` — a directly-supplied AccuWeather key (skips resolution).
-- `datasets` — multi-select of `current_conditions`, `daily_forecast`, `hourly_forecast`, `indices`.
-- `daily_range` — number of forecast days (`1`/`5`/`10`/`15`), default `5`; also the horizon for `indices`.
-- `hourly_range` — number of forecast hours (`1`/`12`/`24`/`72`/`120`), default `12`.
+- `datasets` — object of per-dataset toggles and their options (at least one dataset must be enabled):
+  - `current_conditions` (default `true`) with `current_conditions_details` (default `false`).
+  - `daily_forecast` (default `false`) with `daily_range` (`1`/`5`/`10`/`15`, default `5`) and
+    `daily_forecast_details` (default `false`).
+  - `hourly_forecast` (default `false`) with `hourly_range` (`1`/`12`/`24`/`72`/`120`, default `12`) and
+    `hourly_forecast_details` (default `false`).
+  - `indices` (default `false`) with `indices_range` (`1`/`5`/`10`/`15`, default `5`) and an optional
+    `indices_ids` integer list — empty means all indices, otherwise only the listed AccuWeather index IDs
+    are kept (filtered client-side).
+  - Each `*_details` toggle maps to the AccuWeather `details=true` query parameter for that endpoint.
 
 Sync actions
 -------
