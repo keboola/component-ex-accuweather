@@ -1,7 +1,39 @@
 {
-  "_metadata": {"freeze_time": "2026-07-09T12:00:00", "keboola_vcr_version": "0.5.0", "recorded_at": "2026-07-09T14:31:42.173318+00:00"},
+  "_metadata": {
+    "freeze_time": "2026-07-09T12:00:00",
+    "keboola_vcr_version": "0.5.0",
+    "recorded_at": "2026-07-09T12:00:00+00:00"
+  },
   "interactions": [
-    {"request": {"body": null, "headers": {"Accept": ["application/json"]}, "method": "GET", "uri": "https://dataservice.accuweather.com/locations/v1/cities/search?q=Zzxqwmvbnq123nowhere"}, "response": {"body": {"string": "[]"}, "headers": {"Content-Type": ["application/json; charset=utf-8"], "content-length": ["2"]}, "status": {"code": 200, "message": "OK"}}}
+    {
+      "request": {
+        "body": null,
+        "headers": {
+          "Accept": [
+            "application/json"
+          ]
+        },
+        "method": "GET",
+        "uri": "https://dataservice.accuweather.com/locations/v1/search?q=Zzxqwmvbnq123nowhere"
+      },
+      "response": {
+        "body": {
+          "string": "[]"
+        },
+        "headers": {
+          "Content-Type": [
+            "application/json; charset=utf-8"
+          ],
+          "content-length": [
+            "2"
+          ]
+        },
+        "status": {
+          "code": 200,
+          "message": "OK"
+        }
+      }
+    }
   ],
   "version": 1
 }

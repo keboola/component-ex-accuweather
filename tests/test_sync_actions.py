@@ -21,21 +21,23 @@ def _make(monkeypatch, cfg_kwargs):
 
 
 def test_test_connection_ok(monkeypatch):
-    c = _make(monkeypatch, {"#api_key": "K", "location_type": "location_key", "location_key": "1"})
-    c._client.search_cities.return_value = [{"Key": "1"}]
+    c = _make(monkeypatch, {"#api_key": "K", "location_type": "search", "location_key": "1"})
+    c._client.search_locations.return_value = [{"Key": "1"}]
     c.test_connection()  # must not raise
+    # testConnection probes the generic search endpoint with a fixed query
+    c._client.search_locations.assert_called_once_with("London")
 
 
 def test_test_connection_bad_key(monkeypatch):
-    c = _make(monkeypatch, {"#api_key": "BAD", "location_type": "location_key", "location_key": "1"})
-    c._client.search_cities.side_effect = AuthError("401")
+    c = _make(monkeypatch, {"#api_key": "BAD", "location_type": "search", "location_key": "1"})
+    c._client.search_locations.side_effect = AuthError("401")
     with pytest.raises(UserException):
         c.test_connection()
 
 
 def test_search_locations_returns_labels(monkeypatch):
-    c = _make(monkeypatch, {"#api_key": "K", "location_type": "city", "city_query": "Prague"})
-    c._client.search_cities.return_value = [
+    c = _make(monkeypatch, {"#api_key": "K", "location_type": "search", "location_search": "Prague"})
+    c._client.search_locations.return_value = [
         {
             "Key": "125594",
             "LocalizedName": "Prague",
@@ -46,40 +48,38 @@ def test_search_locations_returns_labels(monkeypatch):
     out = c.search_locations()
     assert out[0].value == "125594"
     assert "Prague" in out[0].label
-    # city mode: the search helper reads city_query
-    c._client.search_cities.assert_called_once_with("Prague", None)
+    # search mode: the picker reads location_search and hits the generic endpoint
+    c._client.search_locations.assert_called_once_with("Prague", None)
 
 
-def test_search_locations_reads_location_search_in_location_key_mode(monkeypatch):
-    # In location_key mode the async picker's helper reads the location_search field.
+def test_search_locations_forwards_country_code(monkeypatch):
     c = _make(
         monkeypatch,
-        {"#api_key": "K", "location_type": "location_key", "location_search": "Prague", "country_code": "CZ"},
+        {"#api_key": "K", "location_type": "search", "location_search": "Prague", "country_code": "CZ"},
     )
-    c._client.search_cities.return_value = [{"Key": "125594", "LocalizedName": "Prague"}]
+    c._client.search_locations.return_value = [{"Key": "125594", "LocalizedName": "Prague"}]
     out = c.search_locations()
     assert out[0].value == "125594"
-    c._client.search_cities.assert_called_once_with("Prague", "CZ")
+    c._client.search_locations.assert_called_once_with("Prague", "CZ")
 
 
-def test_search_locations_postal_mode_uses_postal_endpoint(monkeypatch):
-    # postal_code mode drives the confirmation picker off the postal-codes endpoint.
+def test_search_locations_resolves_postal_code(monkeypatch):
+    # A postal code typed into the single search box resolves via the same generic endpoint.
     c = _make(
         monkeypatch,
-        {"#api_key": "K", "location_type": "postal_code", "postal_query": "10001", "country_code": "US"},
+        {"#api_key": "K", "location_type": "search", "location_search": "110 00", "country_code": "CZ"},
     )
-    c._client.search_postal_codes.return_value = [
-        {"Key": "349727", "LocalizedName": "New York", "Country": {"LocalizedName": "United States"}}
+    c._client.search_locations.return_value = [
+        {"Key": "373889_PC", "LocalizedName": "Josefov", "Country": {"LocalizedName": "Czechia"}}
     ]
     out = c.search_locations()
-    assert out[0].value == "349727"
-    assert "New York" in out[0].label
-    c._client.search_postal_codes.assert_called_once_with("10001", "US")
-    c._client.search_cities.assert_not_called()
+    assert out[0].value == "373889_PC"
+    assert "Josefov" in out[0].label
+    c._client.search_locations.assert_called_once_with("110 00", "CZ")
 
 
 def test_search_locations_no_query_raises(monkeypatch):
-    # location_key mode with no location_search term -> nothing to search on
-    c = _make(monkeypatch, {"#api_key": "K", "location_type": "location_key", "location_key": "1"})
+    # search mode with no location_search term -> nothing to search on
+    c = _make(monkeypatch, {"#api_key": "K", "location_type": "search", "location_key": "1"})
     with pytest.raises(UserException):
         c.search_locations()

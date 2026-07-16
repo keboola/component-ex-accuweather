@@ -3,7 +3,7 @@
   "parameters": {
     "#api_key": "DUMMY_KEY",
     "language": "en-us",
-    "location_type": "location_key",
+    "location_type": "search",
     "location_key": "125594",
     "datasets": {
       "current_conditions": false,

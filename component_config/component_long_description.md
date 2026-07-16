@@ -1,10 +1,9 @@
 The AccuWeather extractor pulls weather data from the [AccuWeather APIs](https://developer.accuweather.com/apis)
 into Keboola Storage as a per-location time series.
 
-Each configuration row represents one **location**, identified by city name, postal code,
-geo-position, or a direct AccuWeather location key. For every location the component resolves an
-AccuWeather `locationKey` (cached in state to conserve API quota) and fetches the datasets you
-enable:
+Each configuration row represents one **location**, identified by a search query (a city name or
+postal code) or a geo-position. For every location the component resolves an AccuWeather
+`locationKey` (cached in state to conserve API quota) and fetches the datasets you enable:
 
 - **Current conditions** — the latest observation for the location.
 - **Daily forecast** — 1, 5, 10, or 15 days.

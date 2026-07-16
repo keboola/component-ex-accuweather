@@ -25,7 +25,6 @@ from parsers import (
     flatten_hourly_forecast,
     flatten_indices,
 )
-from postal_formats import normalize_postal_code
 
 # VCR cassette sanitizers — picked up by the keboola.datadirtest scaffolder during
 # recording. keboola.vcr is a dev-only (test) dependency, absent in the production
@@ -128,24 +127,19 @@ class Component(ComponentBase):
     def _resolved_from(self) -> str:
         cfg = self._config
         raw = (
-            f"{cfg.location_type}|{cfg.city_query}|{cfg.postal_query}|{cfg.location_search}"
-            f"|{cfg.country_code}|{cfg.latitude}|{cfg.longitude}|{cfg.location_key}"
-            f"|{cfg.city_location_key}|{cfg.postal_location_key}"
+            f"{cfg.location_type}|{cfg.location_search}|{cfg.country_code}"
+            f"|{cfg.latitude}|{cfg.longitude}|{cfg.location_key}"
         )
         return hashlib.sha256(raw.encode()).hexdigest()
 
     def _resolve_location_key(self) -> str:
         cfg = self._config
-        if cfg.location_type == LocationType.location_key:
-            assert cfg.location_key is not None  # guaranteed by validate_location()
+        # A confirmed / pasted key (search mode) is authoritative: use it directly,
+        # skipping the free-text search. Headless configs that only set location_search
+        # fall through to the search path below.
+        if cfg.location_type == LocationType.search and cfg.location_key:
+            logging.info("Using confirmed locationKey %s", cfg.location_key)
             return cfg.location_key
-
-        # A key confirmed via the config-time picker (city / postal modes) is authoritative:
-        # use it directly, skipping the free-text search. Headless configs never set this,
-        # so they fall through to the search path below unchanged.
-        if cfg.picked_location_key:
-            logging.info("Using picker-confirmed locationKey %s", cfg.picked_location_key)
-            return cfg.picked_location_key
 
         state = self.get_state_file() or {}
         if state.get(_STATE_KEY) and state.get(_STATE_RESOLVED_FROM) == self._resolved_from():
@@ -159,16 +153,10 @@ class Component(ComponentBase):
     def _search_location_key(self) -> str:
         cfg = self._config
         # validate_location() (run() entrypoint) guarantees the fields each branch needs.
-        if cfg.location_type == LocationType.city:
-            assert cfg.city_query is not None
-            results = self._client.search_cities(cfg.city_query, cfg.country_code)
-        elif cfg.location_type == LocationType.postal_code:
-            assert cfg.postal_query is not None
-            # Normalize to the country's canonical format at call time (raw postal_query
-            # stays untouched in the config / state fingerprint) so a bare "11000" resolves
-            # for CZ just like the national "110 00".
-            query = normalize_postal_code(cfg.country_code, cfg.postal_query)
-            results = self._client.search_postal_codes(query, cfg.country_code)
+        if cfg.location_type == LocationType.search:
+            assert cfg.location_search is not None
+            # Generic text search resolves city names AND postal codes via one endpoint.
+            results = self._client.search_locations(cfg.location_search, cfg.country_code)
         elif cfg.location_type == LocationType.geoposition:
             assert cfg.latitude is not None and cfg.longitude is not None
             geo = self._client.search_geoposition(cfg.latitude, cfg.longitude)
@@ -235,7 +223,7 @@ class Component(ComponentBase):
     @sync_action("testConnection")
     def test_connection(self) -> None:
         try:
-            self._client.search_cities("London")
+            self._client.search_locations("London")
         except (AccuWeatherApiError, ValueError) as exc:
             # AccuWeatherApiError covers network faults, auth/rate-limit/not-found and any
             # unmapped HTTP status; ValueError covers a malformed JSON body from the API.
@@ -243,20 +231,15 @@ class Component(ComponentBase):
 
     @sync_action("search_locations")
     def search_locations(self) -> list[SelectElement]:
-        # Mode-aware confirmation picker. Reads the query field committed by the active mode
-        # (city_query / postal_query / location_search) and hits the matching endpoint:
-        # postal_code mode searches postal codes, every other mode searches cities.
+        # Confirmation picker for search mode. Reads the free-text query (location_search)
+        # and hits the generic text-search endpoint, which matches city names AND postal
+        # codes; country_code narrows it.
         cfg = self._config
         q = cfg.search_query
         if not q:
             raise UserException("Enter a location query to search.")
         try:
-            if cfg.location_type == LocationType.postal_code:
-                # Same normalization as the extraction path so the picker resolves the
-                # same codes the run will (e.g. CZ "11000" -> "110 00").
-                matches = self._client.search_postal_codes(normalize_postal_code(cfg.country_code, q), cfg.country_code)
-            else:
-                matches = self._client.search_cities(q, cfg.country_code)
+            matches = self._client.search_locations(q, cfg.country_code)
         except (AccuWeatherApiError, ValueError) as exc:
             raise UserException(f"Location search failed: {exc}") from exc
         elements = []

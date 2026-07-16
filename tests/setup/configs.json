@@ -1,15 +1,15 @@
 [
   {
     "name": "01_all_datasets_success",
-    "description": "City resolve -> current + daily(5) + hourly(12) -> three non-empty tables, exit 0",
+    "description": "Search resolve (city 'Prague') -> current + daily(5) + hourly(12) -> three non-empty tables, exit 0",
     "config": {
       "action": "run",
       "parameters": {
         "#api_key": "DUMMY_KEY",
         "units": "metric",
         "language": "en-us",
-        "location_type": "city",
-        "city_query": "Prague",
+        "location_type": "search",
+        "location_search": "Prague",
         "country_code": "CZ",
         "datasets": {
           "current_conditions": true,
@@ -26,13 +26,13 @@
   },
   {
     "name": "02_current_conditions_location_key",
-    "description": "location_key type skips search -> current_conditions only, exit 0",
+    "description": "search mode with a confirmed location_key skips search -> current_conditions only, exit 0",
     "config": {
       "action": "run",
       "parameters": {
         "#api_key": "DUMMY_KEY",
         "units": "metric",
-        "location_type": "location_key",
+        "location_type": "search",
         "location_key": "125594",
         "datasets": {
           "current_conditions": true,
@@ -48,33 +48,32 @@
       "action": "testConnection",
       "parameters": {
         "#api_key": "DUMMY_KEY",
-        "location_type": "city",
-        "city_query": "Prague"
+        "location_type": "search"
       }
     }
   },
   {
     "name": "04_search_locations_success",
-    "description": "search_locations sync action returns parsed matches for a query",
+    "description": "search_locations sync action returns parsed matches for a query via the generic search endpoint",
     "config": {
       "action": "search_locations",
       "parameters": {
         "#api_key": "DUMMY_KEY",
-        "location_type": "city",
-        "city_query": "Prague",
+        "location_type": "search",
+        "location_search": "Prague",
         "country_code": "CZ"
       }
     }
   },
   {
     "name": "05_city_not_found",
-    "description": "Valid key + nonsense city query -> empty result -> UserException, exit 1",
+    "description": "Valid key + nonsense search query -> empty result -> UserException, exit 1",
     "config": {
       "action": "run",
       "parameters": {
         "#api_key": "DUMMY_KEY",
-        "location_type": "city",
-        "city_query": "Zzxqwmvbnq123nowhere",
+        "location_type": "search",
+        "location_search": "Zzxqwmvbnq123nowhere",
         "datasets": {
           "current_conditions": true
         }
@@ -83,13 +82,13 @@
   },
   {
     "name": "08_indices_location_key",
-    "description": "location_key type -> lifestyle indices (5-day) only -> non-empty table, exit 0",
+    "description": "search mode with a confirmed location_key -> lifestyle indices (5-day) only -> non-empty table, exit 0",
     "config": {
       "action": "run",
       "parameters": {
         "#api_key": "DUMMY_KEY",
         "language": "en-us",
-        "location_type": "location_key",
+        "location_type": "search",
         "location_key": "125594",
         "datasets": {
           "current_conditions": false,
@@ -100,15 +99,33 @@
     }
   },
   {
-    "name": "10_postal_code_cz_normalized",
-    "description": "CZ postal_query '11000' is normalized to '110 00' before search_postal_codes -> resolves -> current_conditions, exit 0",
+    "name": "09_city_picker_confirmed",
+    "description": "search mode: a confirmed location_key wins over the free-text query -> no search call -> current_conditions, exit 0",
     "config": {
       "action": "run",
       "parameters": {
         "#api_key": "DUMMY_KEY",
         "units": "metric",
-        "location_type": "postal_code",
-        "postal_query": "11000",
+        "location_type": "search",
+        "location_search": "Prague",
+        "location_key": "125594",
+        "datasets": {
+          "current_conditions": true,
+          "current_conditions_details": true
+        }
+      }
+    }
+  },
+  {
+    "name": "10_postal_code_search",
+    "description": "Postal code '110 00' typed into the single search box resolves via the generic search endpoint -> current_conditions, exit 0",
+    "config": {
+      "action": "run",
+      "parameters": {
+        "#api_key": "DUMMY_KEY",
+        "units": "metric",
+        "location_type": "search",
+        "location_search": "110 00",
         "country_code": "CZ",
         "datasets": {
           "current_conditions": true

@@ -9,20 +9,16 @@
       "type": "string",
       "title": "Location Type",
       "enum": [
-        "location_key",
-        "city",
-        "postal_code",
+        "search",
         "geoposition"
       ],
-      "default": "location_key",
+      "default": "search",
       "description": "How this location is identified.",
       "propertyOrder": 10,
       "options": {
         "enum_titles": [
-          "Search & Pick Location Key",
-          "City Name",
-          "Postal Code",
-          "Geo-position (Latitude/Longitude)"
+          "Search",
+          "Geo"
         ]
       }
     },
@@ -283,7 +279,7 @@
       ],
       "propertyOrder": 22,
       "options": {
-        "tooltip": "Two-letter ISO country code, e.g. US, GB, CZ. Narrows the city or postal code search. Required for postal code lookup.",
+        "tooltip": "Two-letter ISO country code, e.g. US, GB, CZ. Optional — narrows the location search (city name or postal code).",
         "enum_titles": [
           "Afghanistan (AF)",
           "Åland Islands (AX)",
@@ -537,82 +533,20 @@
         ],
         "dependencies": {
           "location_type": [
-            "city",
-            "postal_code",
-            "location_key"
+            "search"
           ]
-        }
-      }
-    },
-    "city_query": {
-      "type": "string",
-      "title": "City Name",
-      "description": "City name to search.",
-      "propertyOrder": 20,
-      "options": {
-        "tooltip": "Type a city, e.g. Prague, and optionally set the Country code below to narrow it. Then use Find & confirm location to pin the exact place, or leave it empty to resolve automatically at run time.",
-        "dependencies": {
-          "location_type": "city"
-        }
-      }
-    },
-    "city_location_key": {
-      "type": "string",
-      "title": "Confirmed Location",
-      "format": "select",
-      "enum": [],
-      "description": "Optional: confirm the exact place.",
-      "propertyOrder": 25,
-      "options": {
-        "tooltip": "Click Find & confirm location to search using the City name and Country code above, then pick the exact match. Leave empty to resolve the city name automatically at run time.",
-        "async": {
-          "label": "Find & confirm location",
-          "action": "search_locations"
-        },
-        "dependencies": {
-          "location_type": "city"
-        }
-      }
-    },
-    "postal_query": {
-      "type": "string",
-      "title": "Postal Code",
-      "description": "Postal/ZIP code to look up.",
-      "propertyOrder": 20,
-      "options": {
-        "tooltip": "Type the postal/ZIP code in its national format — for many countries that includes a space (e.g. 110 00 for CZ, SW1A 1AA for GB), none for others (e.g. 10001 for US). A Country Code below is required. Then use Find & confirm location to pin the exact place, or leave it empty to resolve automatically at run time.",
-        "dependencies": {
-          "location_type": "postal_code"
-        }
-      }
-    },
-    "postal_location_key": {
-      "type": "string",
-      "title": "Confirmed Location",
-      "format": "select",
-      "enum": [],
-      "description": "Optional: confirm the exact place.",
-      "propertyOrder": 25,
-      "options": {
-        "tooltip": "Click Find & confirm location to search using the Postal code and Country code above, then pick the exact match. Leave empty to resolve the postal code automatically at run time.",
-        "async": {
-          "label": "Find & confirm location",
-          "action": "search_locations"
-        },
-        "dependencies": {
-          "location_type": "postal_code"
         }
       }
     },
     "location_search": {
       "type": "string",
-      "title": "Location Search Query",
-      "description": "Search text for finding an AccuWeather location key.",
+      "title": "Search",
+      "description": "City name or postal code to search for.",
       "propertyOrder": 20,
       "options": {
-        "tooltip": "Type a city or postal code, then use Find & confirm location below to look up and pick the matching AccuWeather location key, or paste a known key directly into that field.",
+        "tooltip": "Type a city name (e.g. Prague) or a postal/ZIP code (e.g. 110 00, 10001) and optionally set the Country code below to narrow it. Then use Find & confirm location to look up and pick the matching AccuWeather location key.",
         "dependencies": {
-          "location_type": "location_key"
+          "location_type": "search"
         }
       }
     },
@@ -643,7 +577,7 @@
       "title": "Confirmed Location Key",
       "format": "select",
       "enum": [],
-      "description": "AccuWeather location key.",
+      "description": "You must confirm the location here — use Find & confirm location to search and pick the match, or paste a known AccuWeather location key.",
       "propertyOrder": 25,
       "options": {
         "tooltip": "Click Find & confirm location to search using the query above and pick a match, or paste a known AccuWeather location key here.",
@@ -653,7 +587,7 @@
           "action": "search_locations"
         },
         "dependencies": {
-          "location_type": "location_key"
+          "location_type": "search"
         }
       }
     },
@@ -814,14 +748,134 @@
         "indices_ids": {
           "type": "array",
           "title": "Indices Filter",
-          "description": "Optional. Leave empty to output all indices, or list the AccuWeather index IDs to keep (e.g. 1, 5, 26). See the <a href='https://developer.accuweather.com/documentation/indices' target='_blank'>AccuWeather index list</a>.",
+          "description": "Optional. Leave empty to output all indices, or pick specific ones to keep.",
           "propertyOrder": 110,
+          "uniqueItems": true,
           "items": {
             "type": "integer",
-            "title": "Index ID"
+            "enum": [
+              -15,
+              -14,
+              -13,
+              -12,
+              -11,
+              -10,
+              -3,
+              -2,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52
+            ],
+            "options": {
+              "enum_titles": [
+                "UV Index (-15)",
+                "Tree Pollen (-14)",
+                "Ragweed Pollen (-13)",
+                "Mold (-12)",
+                "Grass Pollen (-11)",
+                "Air Quality Index (-10)",
+                "Flight Delays (-3)",
+                "Indoor Activity Forecast (-2)",
+                "Running Forecast (1)",
+                "Jogging Forecast (2)",
+                "Hiking Forecast (3)",
+                "Bicycling Forecast (4)",
+                "Golf Weather Forecast (5)",
+                "Tennis Forecast (6)",
+                "Skateboarding Forecast (7)",
+                "Outdoor Concert Forecast (8)",
+                "Kite Flying Forecast (9)",
+                "Beach & Pool Forecast (10)",
+                "Sailing Forecast (11)",
+                "Stargazing Forecast (12)",
+                "Fishing Forecast (13)",
+                "Construction Forecast (14)",
+                "Ski Weather Forecast (15)",
+                "Healthy Heart Fitness Forecast (16)",
+                "Mosquito Activity Forecast (17)",
+                "Dust & Dander Forecast (18)",
+                "Snow Days Forecast (19)",
+                "Hunting Forecast (20)",
+                "Arthritis Pain Forecast (21)",
+                "Arthritis Pain Forecast (22)",
+                "Asthma Forecast (23)",
+                "Outdoor Barbecue (24)",
+                "Common Cold Forecast (25)",
+                "Flu Forecast (26)",
+                "Migraine Headache Forecast (27)",
+                "Lawn Mowing Forecast (28)",
+                "Outdoor Activity Forecast (29)",
+                "Sinus Headache Forecast (30)",
+                "Flying Travel Index (31)",
+                "Morning School Bus Forecast (35)",
+                "Home Energy Efficiency Forecast (36)",
+                "Fuel Economy Forecast (37)",
+                "Composting Forecast (38)",
+                "Shopping Forecast (39)",
+                "Driving Travel Index (40)",
+                "Thirst Forecast, brought to you by Country Time (41)",
+                "Hair Frizz Forecast (42)",
+                "Dog Walking Comfort Forecast (43)",
+                "COPD Forecast (44)",
+                "Indoor Pest Activity Forecast (45)",
+                "Outdoor Pest Activity Forecast (46)",
+                "AccuLumen Brightness Index™ Forecast (47)",
+                "Dry Skin Forecast (48)",
+                "Makeup and Skincare Forecast (49)",
+                "Clothes Drying Forecast (50)",
+                "Carwashing Forecast (51)",
+                "Climbing Forecast (52)"
+              ]
+            }
           },
           "options": {
-            "tooltip": "Restricts the indices output to the listed AccuWeather index IDs. Leave empty to keep every index. Find each index ID and name in the AccuWeather index list at https://developer.accuweather.com/documentation/indices",
+            "tooltip": "Restricts the indices output to the selected AccuWeather indices. Leave empty to keep every index.",
             "dependencies": {
               "indices": true
             }

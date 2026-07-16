@@ -78,13 +78,32 @@ def test_daily_forecast_builds_correct_path_and_params():
         assert m.last_request.qs["details"] == ["true"]
 
 
-def test_city_search_with_country_code():
+def test_generic_search_with_country_code():
     c = AccuWeatherClient("KEY")
     with requests_mock.Mocker() as m:
-        m.get(f"{BASE}/locations/v1/cities/CZ/search", json=[{"Key": "125594"}])
-        out = c.search_cities("Prague", "CZ")
+        m.get(f"{BASE}/locations/v1/search", json=[{"Key": "125594"}])
+        out = c.search_locations("Prague", "CZ")
         assert out[0]["Key"] == "125594"
         assert m.last_request.qs["q"] == ["prague"]
+        assert m.last_request.qs["country"] == ["cz"]
+
+
+def test_generic_search_resolves_postal_code():
+    # The same generic endpoint resolves a postal code (PostalCode-type result).
+    c = AccuWeatherClient("KEY")
+    with requests_mock.Mocker() as m:
+        m.get(f"{BASE}/locations/v1/search", json=[{"Key": "373889_PC", "Type": "PostalCode"}])
+        out = c.search_locations("110 00", "CZ")
+        assert out[0]["Key"] == "373889_PC"
+        assert m.last_request.qs["q"] == ["110 00"]
+
+
+def test_generic_search_omits_country_when_absent():
+    c = AccuWeatherClient("KEY")
+    with requests_mock.Mocker() as m:
+        m.get(f"{BASE}/locations/v1/search", json=[])
+        c.search_locations("London")
+        assert "country" not in m.last_request.qs
 
 
 def test_hourly_forecast_path():

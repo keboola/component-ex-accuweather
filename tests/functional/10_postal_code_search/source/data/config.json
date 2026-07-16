@@ -3,8 +3,8 @@
   "parameters": {
     "#api_key": "DUMMY_KEY",
     "units": "metric",
-    "location_type": "postal_code",
-    "postal_query": "11000",
+    "location_type": "search",
+    "location_search": "110 00",
     "country_code": "CZ",
     "datasets": {
       "current_conditions": true

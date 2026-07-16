@@ -3,9 +3,9 @@
   "parameters": {
     "#api_key": "DUMMY_KEY",
     "units": "metric",
-    "location_type": "city",
-    "city_query": "Prague",
-    "city_location_key": "125594",
+    "location_type": "search",
+    "location_search": "Prague",
+    "location_key": "125594",
     "datasets": {
       "current_conditions": true,
       "current_conditions_details": true

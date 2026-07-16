@@ -2,8 +2,8 @@
   "action": "run",
   "parameters": {
     "#api_key": "INVALID_KEY_0000000000000000000000",
-    "location_type": "city",
-    "city_query": "Prague",
+    "location_type": "search",
+    "location_search": "Prague",
     "country_code": "CZ",
     "datasets": {
       "current_conditions": true

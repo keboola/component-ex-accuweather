@@ -25,10 +25,8 @@ class HourlyRange(IntEnum):
 
 
 class LocationType(StrEnum):
-    city = "city"
-    postal_code = "postal_code"
+    search = "search"
     geoposition = "geoposition"
-    location_key = "location_key"
 
 
 class DatasetsConfig(BaseModel):
@@ -68,19 +66,16 @@ class Configuration(BaseModel):
     units: Units = Units.metric
     language: str = "en-us"
 
-    location_type: LocationType = LocationType.location_key
-    city_query: str | None = None
-    postal_query: str | None = None
+    location_type: LocationType = LocationType.search
+    # search mode: free-text query (city name OR postal code) resolved via the generic
+    # AccuWeather text-search endpoint; country_code optionally narrows it. location_key
+    # holds the key confirmed by the async picker (or pasted directly) — when set it is
+    # authoritative and the free-text query is not resolved at runtime.
     location_search: str | None = None
     country_code: str | None = None
     latitude: float | None = None
     longitude: float | None = None
     location_key: str | None = None
-    # Optional keys committed by the config-time confirmation picker in city / postal modes.
-    # UI-only add-on: when set they pin the exact place; when empty the free-text query resolves
-    # at runtime exactly as before (headless configs never populate these).
-    city_location_key: str | None = None
-    postal_location_key: str | None = None
 
     datasets: DatasetsConfig = Field(default_factory=DatasetsConfig)
 
@@ -101,44 +96,19 @@ class Configuration(BaseModel):
         does not wrap it and the ``except ValidationError`` above never catches it).
         """
         lt = self.location_type
-        if lt == LocationType.city and not (self.city_query or self.city_location_key):
-            raise UserException("city_query is required when location_type is 'city'.")
-        if lt == LocationType.postal_code:
-            # A picker-confirmed key stands on its own; the free-text path still needs both
-            # the postal code and a country code (unchanged headless behaviour).
-            if not (self.postal_query or self.postal_location_key):
-                raise UserException("postal_query is required when location_type is 'postal_code'.")
-            if self.postal_query and not self.postal_location_key and not self.country_code:
-                raise UserException("country_code is required when location_type is 'postal_code'.")
+        if lt == LocationType.search and not (self.location_key or self.location_search):
+            # Either a confirmed/pasted key, or a free-text query to resolve at run time.
+            raise UserException("A location search query or a confirmed location key is required in 'search' mode.")
         if lt == LocationType.geoposition and (self.latitude is None or self.longitude is None):
             raise UserException("latitude and longitude are required for geoposition.")
-        if lt == LocationType.location_key and not self.location_key:
-            raise UserException("location_key is required when location_type is 'location_key'.")
         if not self.datasets.any_selected:
             raise UserException("Select at least one dataset to extract for this location.")
 
     @property
     def search_query(self) -> str | None:
-        """Mode-specific free-text query used for location search (city/postal/location-key modes)."""
-        if self.location_type == LocationType.city:
-            return self.city_query
-        if self.location_type == LocationType.postal_code:
-            return self.postal_query
-        if self.location_type == LocationType.location_key:
+        """Free-text query used by the location search (search mode only)."""
+        if self.location_type == LocationType.search:
             return self.location_search
-        return None
-
-    @property
-    def picked_location_key(self) -> str | None:
-        """Location key confirmed via the config-time picker (city / postal modes only).
-
-        None for headless configs and modes without a picker, so the runtime resolver
-        falls back to free-text search exactly as before.
-        """
-        if self.location_type == LocationType.city:
-            return self.city_location_key
-        if self.location_type == LocationType.postal_code:
-            return self.postal_location_key
         return None
 
     @property

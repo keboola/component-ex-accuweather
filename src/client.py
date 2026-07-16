@@ -142,16 +142,18 @@ class AccuWeatherClient:
         suffix = f" (requestId={req_id})" if req_id else ""
         return f"HTTP {resp.status_code}: {str(title)[:_MAX_ERROR_BODY]}{suffix}"
 
-    def search_cities(self, q: str, country_code: str | None = None) -> list[dict[str, Any]]:
-        if country_code:
-            return self._get(f"/locations/v1/cities/{country_code}/search", {"q": q})
-        return self._get("/locations/v1/cities/search", {"q": q})
+    def search_locations(self, q: str, country_code: str | None = None) -> list[dict[str, Any]]:
+        """Generic text search — matches cities, administrative areas AND postal codes.
 
-    def search_postal_codes(self, q: str, country_code: str | None = None) -> list[dict[str, Any]]:
-        path = (
-            f"/locations/v1/postalcodes/{country_code}/search" if country_code else "/locations/v1/postalcodes/search"
-        )
-        return self._get(path, {"q": q})
+        AccuWeather's ``/locations/v1/search`` endpoint resolves a single free-text
+        query against every location type (verified: "Prague" -> city key, "110 00"
+        -> CZ postal key), so one search box serves both city names and postal codes.
+        ``country_code`` is forwarded as the optional ``country`` hint.
+        """
+        params: dict[str, Any] = {"q": q}
+        if country_code:
+            params["country"] = country_code
+        return self._get("/locations/v1/search", params)
 
     def search_geoposition(self, lat: float, lon: float) -> dict[str, Any] | None:
         return self._get("/locations/v1/cities/geoposition/search", {"q": f"{lat},{lon}"})

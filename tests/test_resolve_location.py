@@ -19,22 +19,21 @@ def _make_component(monkeypatch, cfg_kwargs, state):
 
 
 def test_uses_cached_key_when_resolved_from_matches(monkeypatch):
-    cfg = {"#api_key": "K", "location_type": "city", "city_query": "Prague"}
+    cfg = {"#api_key": "K", "location_type": "search", "location_search": "Prague"}
     c = _make_component(monkeypatch, cfg, {})
     c._state = {"location_key": "125594", "resolved_from": c._resolved_from()}
     monkeypatch.setattr(c, "get_state_file", lambda: c._state)
     assert c._resolve_location_key() == "125594"
-    c._client.search_cities.assert_not_called()
+    c._client.search_locations.assert_not_called()
 
 
-def test_resolves_via_city_search_on_first_run(monkeypatch):
-    cfg = {"#api_key": "K", "location_type": "city", "city_query": "Prague", "country_code": "CZ"}
+def test_resolves_via_generic_search_on_first_run(monkeypatch):
+    cfg = {"#api_key": "K", "location_type": "search", "location_search": "Prague", "country_code": "CZ"}
     c = _make_component(monkeypatch, cfg, {})
-    c._client.search_cities.return_value = [{"Key": "125594"}]
+    c._client.search_locations.return_value = [{"Key": "125594"}]
     assert c._resolve_location_key() == "125594"
-    # city_query (not any other query field) drives the client call
-    c._client.search_cities.assert_called_once_with("Prague", "CZ")
-    c._client.search_postal_codes.assert_not_called()
+    # location_search drives the generic search (matches cities AND postal codes)
+    c._client.search_locations.assert_called_once_with("Prague", "CZ")
     c.write_state_file.assert_called_once()
     # cached-state shape: location_key + a resolved_from fingerprint
     written = c.write_state_file.call_args.args[0]
@@ -42,68 +41,40 @@ def test_resolves_via_city_search_on_first_run(monkeypatch):
     assert written["resolved_from"] == c._resolved_from()
 
 
-def test_resolves_via_postal_code_search(monkeypatch):
-    cfg = {"#api_key": "K", "location_type": "postal_code", "postal_query": "10001", "country_code": "US"}
+def test_resolves_postal_code_via_generic_search(monkeypatch):
+    # A postal code typed into the single search box resolves via the same generic endpoint.
+    cfg = {"#api_key": "K", "location_type": "search", "location_search": "110 00", "country_code": "CZ"}
     c = _make_component(monkeypatch, cfg, {})
-    c._client.search_postal_codes.return_value = [{"Key": "349727"}]
-    assert c._resolve_location_key() == "349727"
-    # postal_query (not any other query field) drives the client call
-    c._client.search_postal_codes.assert_called_once_with("10001", "US")
-    c._client.search_cities.assert_not_called()
+    c._client.search_locations.return_value = [{"Key": "373889_PC"}]
+    assert c._resolve_location_key() == "373889_PC"
+    c._client.search_locations.assert_called_once_with("110 00", "CZ")
 
 
-def test_postal_query_is_normalized_before_search(monkeypatch):
-    # CZ postal lookup: the bare "11000" is normalized to the national "110 00"
-    # before hitting search_postal_codes, while the raw stays in the config.
-    cfg = {"#api_key": "K", "location_type": "postal_code", "postal_query": "11000", "country_code": "CZ"}
-    c = _make_component(monkeypatch, cfg, {})
-    c._client.search_postal_codes.return_value = [{"Key": "125594"}]
-    assert c._resolve_location_key() == "125594"
-    c._client.search_postal_codes.assert_called_once_with("110 00", "CZ")
-    # raw query is untouched
-    assert c._config.postal_query == "11000"
-
-
-def test_direct_location_key_skips_resolution(monkeypatch):
-    cfg = {"#api_key": "K", "location_type": "location_key", "location_key": "999"}
+def test_confirmed_key_skips_resolution(monkeypatch):
+    # A confirmed/pasted key in search mode is authoritative: no search, no state lookup.
+    cfg = {"#api_key": "K", "location_type": "search", "location_search": "Prague", "location_key": "999"}
     c = _make_component(monkeypatch, cfg, {})
     assert c._resolve_location_key() == "999"
-    c._client.search_cities.assert_not_called()
-
-
-def test_city_picker_key_skips_search(monkeypatch):
-    # A picker-confirmed key in city mode is authoritative: no search, no state lookup.
-    cfg = {"#api_key": "K", "location_type": "city", "city_query": "Prague", "city_location_key": "125594"}
-    c = _make_component(monkeypatch, cfg, {})
-    assert c._resolve_location_key() == "125594"
-    c._client.search_cities.assert_not_called()
+    c._client.search_locations.assert_not_called()
     c.write_state_file.assert_not_called()
 
 
-def test_postal_picker_key_skips_search(monkeypatch):
-    cfg = {"#api_key": "K", "location_type": "postal_code", "postal_location_key": "349727"}
+def test_empty_search_result_raises_userexception(monkeypatch):
+    cfg = {"#api_key": "K", "location_type": "search", "location_search": "Nowhere"}
     c = _make_component(monkeypatch, cfg, {})
-    assert c._resolve_location_key() == "349727"
-    c._client.search_postal_codes.assert_not_called()
-    c.write_state_file.assert_not_called()
-
-
-def test_empty_city_result_raises_userexception(monkeypatch):
-    cfg = {"#api_key": "K", "location_type": "city", "city_query": "Nowhere"}
-    c = _make_component(monkeypatch, cfg, {})
-    c._client.search_cities.return_value = []
+    c._client.search_locations.return_value = []
     with pytest.raises(UserException):
         c._resolve_location_key()
 
 
 def test_stale_cache_triggers_reresolution(monkeypatch):
-    cfg = {"#api_key": "K", "location_type": "city", "city_query": "Prague"}
+    cfg = {"#api_key": "K", "location_type": "search", "location_search": "Prague"}
     c = _make_component(monkeypatch, cfg, {})
     c._state = {"location_key": "OLD", "resolved_from": "different-hash"}
     monkeypatch.setattr(c, "get_state_file", lambda: c._state)
-    c._client.search_cities.return_value = [{"Key": "NEW"}]
+    c._client.search_locations.return_value = [{"Key": "NEW"}]
     assert c._resolve_location_key() == "NEW"
-    c._client.search_cities.assert_called_once()
+    c._client.search_locations.assert_called_once()
 
 
 def test_geoposition_resolution(monkeypatch):

@@ -42,7 +42,8 @@ Supported Endpoints
 | Hourly forecast | `/forecasts/v1/hourly/{n}hour/{locationKey}` | `hourly_forecast` | `(location_key, forecast_datetime)` |
 | Lifestyle indices | `/indices/v1/daily/{n}day/{locationKey}` | `indices` | `(location_key, index_id, date)` |
 
-Locations endpoints are used internally to resolve the `locationKey`.
+The generic Locations text-search endpoint (`/locations/v1/search`) is used internally to resolve the
+`locationKey` from a city name or postal code; `geoposition` uses `/locations/v1/cities/geoposition/search`.
 
 If you need additional endpoints, please submit your request to
 [ideas.keboola.com](https://ideas.keboola.com/).
@@ -58,23 +59,19 @@ Config-level (root)
 
 Row-level (per location)
 -------
-- `location_type` — `city` (default), `postal_code`, `geoposition`, or `location_key`.
-- `city_query` — city name to search (`city` mode).
-- `postal_query` — postal/ZIP code to look up (`postal_code` mode; `country_code` required). The code is
-  normalized to the country's canonical format before the lookup, so both national and bare forms resolve
-  (e.g. Czech `11000` and `110 00` both work; UK `sw1a1aa` becomes `SW1A 1AA`). The raw value you enter is
-  kept as-is in the config; normalization happens only at request time. Countries without a separator in their
-  postal format (e.g. US ZIP) pass through unchanged. Templates are derived from the GeoNames
-  `postalCodeFormat` data.
-- `location_search` — free-text term for the `search_locations` sync action (`location_key` mode).
-- `country_code` — ISO 3166-1 alpha-2 country code to disambiguate city/postal search; required for postal lookup.
-  Picked from a searchable dropdown of all assigned codes (by country name or code); the stored value is the
-  uppercase 2-letter code (e.g. `CZ`, `US`, `GB`).
-- `city_location_key` / `postal_location_key` — optional key confirmed by the "Find & confirm location" picker
-  in `city` / `postal_code` mode. When set it pins the exact place and skips resolution; when empty the
-  free-text query above resolves at run time (headless configs leave these empty).
-- `latitude` / `longitude` — for `geoposition`.
-- `location_key` — a directly-supplied AccuWeather key (skips resolution).
+- `location_type` — `search` (default) or `geoposition`.
+- **Search mode** (`search`): one free-text box that resolves both city names and postal codes.
+  - `location_search` — the text to search (a city name like `Prague`, or a postal/ZIP code like `110 00`
+    or `10001`). Resolved via AccuWeather's generic text-search endpoint, which matches cities,
+    administrative areas AND postal codes.
+  - `country_code` — optional ISO 3166-1 alpha-2 country code that narrows the search. Picked from a
+    searchable dropdown of all assigned codes (by country name or code); the stored value is the
+    uppercase 2-letter code (e.g. `CZ`, `US`, `GB`).
+  - `location_key` — the confirmed AccuWeather location key. Use **Find & confirm location** to search with
+    the query above and pick a match, or paste a known key directly. When set it is authoritative and skips
+    resolution; when empty the `location_search` query is resolved at run time (headless configs may leave it
+    empty and rely on `location_search`).
+- **Geo mode** (`geoposition`): `latitude` / `longitude` in decimal degrees.
 - `datasets` — object of per-dataset toggles and their options (at least one dataset must be enabled):
   - `current_conditions` (default `true`) with `current_conditions_details` (default `false`).
   - `daily_forecast` (default `false`) with `daily_range` (`1`/`5`/`10`/`15`, default `5`) and
@@ -82,15 +79,17 @@ Row-level (per location)
   - `hourly_forecast` (default `false`) with `hourly_range` (`1`/`12`/`24`/`72`/`120`, default `12`) and
     `hourly_forecast_details` (default `false`).
   - `indices` (default `false`) with `indices_range` (`1`/`5`/`10`/`15`, default `5`) and an optional
-    `indices_ids` integer list — empty means all indices, otherwise only the listed AccuWeather index IDs
-    are kept (filtered client-side).
+    `indices_ids` multi-select — pick specific AccuWeather indices from the built-in list (each shown as
+    "Name (ID)"); empty means keep all indices, otherwise only the selected index IDs are kept (filtered
+    client-side).
   - Each `*_details` toggle adds extra detail columns to that dataset's table (see Output below). The
     columns are always present in the schema and left empty when the toggle is off.
 
 Sync actions
 -------
 - `testConnection` — validates the API key.
-- `search_locations` — returns matching locations for the typed query.
+- `search_locations` — returns matching locations (cities and postal codes) for the typed query via the
+  generic text-search endpoint.
 
 Output
 ======

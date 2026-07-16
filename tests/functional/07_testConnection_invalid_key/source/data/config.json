@@ -2,7 +2,6 @@
   "action": "testConnection",
   "parameters": {
     "#api_key": "INVALID_KEY_0000000000000000000000",
-    "location_type": "city",
-    "city_query": "Prague"
+    "location_type": "search"
   }
 }

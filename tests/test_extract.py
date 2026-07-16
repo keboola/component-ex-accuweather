@@ -9,9 +9,7 @@ from configuration import Configuration
 def _make(monkeypatch, datasets):
     monkeypatch.setattr(comp_mod.Component, "__init__", lambda self: None)
     c = comp_mod.Component()
-    c._config = Configuration(
-        **{"#api_key": "K", "location_type": "location_key", "location_key": "1", "datasets": datasets}
-    )
+    c._config = Configuration(**{"#api_key": "K", "location_type": "search", "location_key": "1", "datasets": datasets})
     c._client = MagicMock()
     c._write_table = MagicMock()
     return c
@@ -73,7 +71,7 @@ def test_indices_filter_empty_keeps_all(monkeypatch):
 
 
 def test_run_dispatches_only_selected_datasets(monkeypatch):
-    # location_key mode with a dataset selected -> validate_location() passes without stubbing.
+    # search mode with a confirmed key and a dataset selected -> validate_location() passes.
     c = _make(monkeypatch, {"current_conditions": False, "hourly_forecast": True})
     monkeypatch.setattr(c, "_resolve_location_key", lambda: "1")
     c._extract_current_conditions = MagicMock()

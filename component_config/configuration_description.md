@@ -6,9 +6,10 @@ measurement **Units** (metric/imperial), the **Language** for text fields, and w
 
 ### Locations
 
-Add one configuration **row per location**. For each row choose a **Location Type** (city name,
-postal code, geo-position, or a direct AccuWeather location key) and fill in the matching fields.
-Use **Find & confirm location** to look up an AccuWeather location key from a query and pin the exact match.
+Add one configuration **row per location**. For each row choose a **Location Type**: **Search** or
+**Geo**. In Search mode, type a city name or a postal code into the single search box (optionally set a
+Country Code to narrow it), then use **Find & confirm location** to look up the AccuWeather location key
+and pick the exact match. In Geo mode, enter latitude and longitude.
 
 Then pick the **Datasets** to pull (current conditions, daily forecast, hourly forecast) and, where
 applicable, the forecast **range** (days or hours).
