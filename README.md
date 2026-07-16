@@ -67,7 +67,9 @@ Row-level (per location)
   postal format (e.g. US ZIP) pass through unchanged. Templates are derived from the GeoNames
   `postalCodeFormat` data.
 - `location_search` — free-text term for the `search_locations` sync action (`location_key` mode).
-- `country_code` — ISO 3166 2-letter country code to disambiguate city/postal search; required for postal lookup.
+- `country_code` — ISO 3166-1 alpha-2 country code to disambiguate city/postal search; required for postal lookup.
+  Picked from a searchable dropdown of all assigned codes (by country name or code); the stored value is the
+  uppercase 2-letter code (e.g. `CZ`, `US`, `GB`).
 - `city_location_key` / `postal_location_key` — optional key confirmed by the "Find & confirm location" picker
   in `city` / `postal_code` mode. When set it pins the exact place and skips resolution; when empty the
   free-text query above resolves at run time (headless configs leave these empty).
