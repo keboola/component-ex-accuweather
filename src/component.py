@@ -126,10 +126,7 @@ class Component(ComponentBase):
     # --- location resolution -------------------------------------------------
     def _resolved_from(self) -> str:
         cfg = self._config
-        raw = (
-            f"{cfg.location_type}|{cfg.location_search}|{cfg.country_code}"
-            f"|{cfg.latitude}|{cfg.longitude}|{cfg.location_key}"
-        )
+        raw = f"{cfg.location_type}|{cfg.location_search}|{cfg.latitude}|{cfg.longitude}|{cfg.location_key}"
         return hashlib.sha256(raw.encode()).hexdigest()
 
     def _resolve_location_key(self) -> str:
@@ -156,7 +153,7 @@ class Component(ComponentBase):
         if cfg.location_type == LocationType.search:
             assert cfg.location_search is not None
             # Generic text search resolves city names AND postal codes via one endpoint.
-            results = self._client.search_locations(cfg.location_search, cfg.country_code)
+            results = self._client.search_locations(cfg.location_search)
         elif cfg.location_type == LocationType.geoposition:
             assert cfg.latitude is not None and cfg.longitude is not None
             geo = self._client.search_geoposition(cfg.latitude, cfg.longitude)
@@ -232,14 +229,13 @@ class Component(ComponentBase):
     @sync_action("search_locations")
     def search_locations(self) -> list[SelectElement]:
         # Confirmation picker for search mode. Reads the free-text query (location_search)
-        # and hits the generic text-search endpoint, which matches city names AND postal
-        # codes; country_code narrows it.
+        # and hits the generic text-search endpoint, which matches city names AND postal codes.
         cfg = self._config
         q = cfg.search_query
         if not q:
             raise UserException("Enter a location query to search.")
         try:
-            matches = self._client.search_locations(q, cfg.country_code)
+            matches = self._client.search_locations(q)
         except (AccuWeatherApiError, ValueError) as exc:
             raise UserException(f"Location search failed: {exc}") from exc
         elements = []

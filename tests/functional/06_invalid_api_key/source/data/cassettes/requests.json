@@ -14,11 +14,11 @@
           ]
         },
         "method": "GET",
-        "uri": "https://dataservice.accuweather.com/locations/v1/search?q=Prague&country=CZ"
+        "uri": "https://dataservice.accuweather.com/locations/v1/search?q=Prague"
       },
       "response": {
         "body": {
-          "string": "{\n  \"type\": \"https://httpproblems.com/http-status/401\",\n  \"title\": \"Unauthorized\",\n  \"status\": 401,\n  \"instance\": \"/locations/v1/search\",\n  \"trace\": {\n    \"timestamp\": \"2026-07-16T14:26:04.158Z\",\n    \"requestId\": \"7515d2e0-bda5-40dc-9160-c77cd7302145\",\n    \"buildId\": \"7617756e-24a7-42b1-99ff-5d4f0a5faf74\"\n  },\n  \"Code\": \"Unauthorized\",\n  \"Message\": \"API authorization failed\",\n  \"Reference\": \"https://dataservice.accuweather.com/locations/v1/search?q=Prague&country=CZ\"\n}"
+          "string": "{\n  \"type\": \"https://httpproblems.com/http-status/401\",\n  \"title\": \"Unauthorized\",\n  \"status\": 401,\n  \"instance\": \"/locations/v1/search\",\n  \"trace\": {\n    \"timestamp\": \"2026-07-16T14:26:04.158Z\",\n    \"requestId\": \"7515d2e0-bda5-40dc-9160-c77cd7302145\",\n    \"buildId\": \"7617756e-24a7-42b1-99ff-5d4f0a5faf74\"\n  },\n  \"Code\": \"Unauthorized\",\n  \"Message\": \"API authorization failed\",\n  \"Reference\": \"https://dataservice.accuweather.com/locations/v1/search?q=Prague\"\n}"
         },
         "headers": {
           "Content-Type": [

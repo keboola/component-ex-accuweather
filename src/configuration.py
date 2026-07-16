@@ -68,11 +68,10 @@ class Configuration(BaseModel):
 
     location_type: LocationType = LocationType.search
     # search mode: free-text query (city name OR postal code) resolved via the generic
-    # AccuWeather text-search endpoint; country_code optionally narrows it. location_key
-    # holds the key confirmed by the async picker (or pasted directly) — when set it is
-    # authoritative and the free-text query is not resolved at runtime.
+    # AccuWeather text-search endpoint. location_key holds the key confirmed by the async
+    # picker (or pasted directly) — when set it is authoritative and the free-text query
+    # is not resolved at runtime.
     location_search: str | None = None
-    country_code: str | None = None
     latitude: float | None = None
     longitude: float | None = None
     location_key: str | None = None

@@ -64,9 +64,6 @@ Row-level (per location)
   - `location_search` — the text to search (a city name like `Prague`, or a postal/ZIP code like `110 00`
     or `10001`). Resolved via AccuWeather's generic text-search endpoint, which matches cities,
     administrative areas AND postal codes.
-  - `country_code` — optional ISO 3166-1 alpha-2 country code that narrows the search. Picked from a
-    searchable dropdown of all assigned codes (by country name or code); the stored value is the
-    uppercase 2-letter code (e.g. `CZ`, `US`, `GB`).
   - `location_key` — the confirmed AccuWeather location key. Use **Find & confirm location** to search with
     the query above and pick a match, or paste a known key directly. When set it is authoritative and skips
     resolution; when empty the `location_search` query is resolved at run time (headless configs may leave it

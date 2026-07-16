@@ -28,12 +28,12 @@ def test_uses_cached_key_when_resolved_from_matches(monkeypatch):
 
 
 def test_resolves_via_generic_search_on_first_run(monkeypatch):
-    cfg = {"#api_key": "K", "location_type": "search", "location_search": "Prague", "country_code": "CZ"}
+    cfg = {"#api_key": "K", "location_type": "search", "location_search": "Prague"}
     c = _make_component(monkeypatch, cfg, {})
     c._client.search_locations.return_value = [{"Key": "125594"}]
     assert c._resolve_location_key() == "125594"
     # location_search drives the generic search (matches cities AND postal codes)
-    c._client.search_locations.assert_called_once_with("Prague", "CZ")
+    c._client.search_locations.assert_called_once_with("Prague")
     c.write_state_file.assert_called_once()
     # cached-state shape: location_key + a resolved_from fingerprint
     written = c.write_state_file.call_args.args[0]
@@ -43,11 +43,11 @@ def test_resolves_via_generic_search_on_first_run(monkeypatch):
 
 def test_resolves_postal_code_via_generic_search(monkeypatch):
     # A postal code typed into the single search box resolves via the same generic endpoint.
-    cfg = {"#api_key": "K", "location_type": "search", "location_search": "110 00", "country_code": "CZ"}
+    cfg = {"#api_key": "K", "location_type": "search", "location_search": "110 00"}
     c = _make_component(monkeypatch, cfg, {})
     c._client.search_locations.return_value = [{"Key": "373889_PC"}]
     assert c._resolve_location_key() == "373889_PC"
-    c._client.search_locations.assert_called_once_with("110 00", "CZ")
+    c._client.search_locations.assert_called_once_with("110 00")
 
 
 def test_confirmed_key_skips_resolution(monkeypatch):

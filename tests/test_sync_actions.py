@@ -42,40 +42,26 @@ def test_search_locations_returns_labels(monkeypatch):
             "Key": "125594",
             "LocalizedName": "Prague",
             "AdministrativeArea": {"LocalizedName": "Prague"},
-            "Country": {"LocalizedName": "Czechia"},
         }
     ]
     out = c.search_locations()
     assert out[0].value == "125594"
     assert "Prague" in out[0].label
     # search mode: the picker reads location_search and hits the generic endpoint
-    c._client.search_locations.assert_called_once_with("Prague", None)
-
-
-def test_search_locations_forwards_country_code(monkeypatch):
-    c = _make(
-        monkeypatch,
-        {"#api_key": "K", "location_type": "search", "location_search": "Prague", "country_code": "CZ"},
-    )
-    c._client.search_locations.return_value = [{"Key": "125594", "LocalizedName": "Prague"}]
-    out = c.search_locations()
-    assert out[0].value == "125594"
-    c._client.search_locations.assert_called_once_with("Prague", "CZ")
+    c._client.search_locations.assert_called_once_with("Prague")
 
 
 def test_search_locations_resolves_postal_code(monkeypatch):
     # A postal code typed into the single search box resolves via the same generic endpoint.
     c = _make(
         monkeypatch,
-        {"#api_key": "K", "location_type": "search", "location_search": "110 00", "country_code": "CZ"},
+        {"#api_key": "K", "location_type": "search", "location_search": "110 00"},
     )
-    c._client.search_locations.return_value = [
-        {"Key": "373889_PC", "LocalizedName": "Josefov", "Country": {"LocalizedName": "Czechia"}}
-    ]
+    c._client.search_locations.return_value = [{"Key": "373889_PC", "LocalizedName": "Josefov"}]
     out = c.search_locations()
     assert out[0].value == "373889_PC"
     assert "Josefov" in out[0].label
-    c._client.search_locations.assert_called_once_with("110 00", "CZ")
+    c._client.search_locations.assert_called_once_with("110 00")
 
 
 def test_search_locations_no_query_raises(monkeypatch):

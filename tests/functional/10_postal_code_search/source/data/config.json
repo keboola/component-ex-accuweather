@@ -5,7 +5,6 @@
     "units": "metric",
     "location_type": "search",
     "location_search": "110 00",
-    "country_code": "CZ",
     "datasets": {
       "current_conditions": true
     }
