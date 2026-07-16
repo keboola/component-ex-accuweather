@@ -294,3 +294,21 @@ def test_flatten_indices_falls_back_to_epoch_when_no_local_datetime():
     # The epoch fallback is converted to an ISO timestamp string so the TIMESTAMP-typed
     # `date` PK column never carries a bare integer.
     assert rows[0]["date"] == "2026-07-09T05:00:00+00:00"
+
+
+def test_flatten_indices_skips_entries_with_no_resolvable_date():
+    # `date` is part of INDICES_PK (non-nullable). An entry with neither LocalDateTime
+    # nor a valid EpochDateTime resolves to None and must be dropped, not emitted as a
+    # null PK. Entries with a resolvable date (local or epoch) are still kept.
+    payload = [
+        {"ID": 1, "Name": "No Date"},  # neither field -> skipped
+        {"ID": 2, "Name": "Bad Epoch", "EpochDateTime": "not-a-number"},  # invalid -> skipped
+        {"ID": 3, "Name": "Local", "LocalDateTime": "2026-07-09T07:00:00+02:00"},  # kept
+        {"ID": 4, "Name": "Epoch", "EpochDateTime": 1783573200},  # kept
+    ]
+    rows = flatten_indices("125594", payload)
+    assert [r["index_id"] for r in rows] == [3, 4]
+    assert rows[0]["date"] == "2026-07-09T07:00:00+02:00"
+    assert rows[1]["date"] == "2026-07-09T05:00:00+00:00"
+    # No row carries a null date (would violate the non-nullable PK).
+    assert all(r["date"] is not None for r in rows)

@@ -1,5 +1,8 @@
+import logging
 from datetime import UTC, datetime
 from typing import Any
+
+LOG = logging.getLogger(__name__)
 
 CURRENT_PK = ["location_key", "observation_datetime"]
 DAILY_PK = ["location_key", "forecast_date"]
@@ -256,14 +259,17 @@ def flatten_indices(location_key: str, payload: list[dict[str, Any]]) -> list[di
     for i in payload:
         # `date` prefers LocalDateTime, falling back to the epoch converted to an
         # ISO timestamp — not a plain path, so it stays an explicit extra.
-        rows.append(
-            _map_row(
-                i,
-                spec,
-                location_key=location_key,
-                date=i.get("LocalDateTime") or _epoch_to_iso(i.get("EpochDateTime")),
+        date = i.get("LocalDateTime") or _epoch_to_iso(i.get("EpochDateTime"))
+        if date is None:
+            # `date` is part of INDICES_PK (non-nullable), so an index entry with no
+            # resolvable timestamp can't be written — skip it rather than emit a null PK.
+            LOG.debug(
+                "Skipping index entry with no resolvable date (index_id=%s, name=%s)",
+                i.get("ID"),
+                i.get("Name"),
             )
-        )
+            continue
+        rows.append(_map_row(i, spec, location_key=location_key, date=date))
     return rows
 
 

@@ -221,9 +221,9 @@ class Component(ComponentBase):
     def test_connection(self) -> None:
         try:
             self._client.search_locations("London")
-        except (AccuWeatherApiError, ValueError) as exc:
-            # AccuWeatherApiError covers network faults, auth/rate-limit/not-found and any
-            # unmapped HTTP status; ValueError covers a malformed JSON body from the API.
+        except AccuWeatherApiError as exc:
+            # AccuWeatherApiError covers network faults, auth/rate-limit/not-found, any
+            # unmapped HTTP status, and malformed 2xx JSON (the client maps those internally).
             raise UserException(f"Connection test failed: {exc}") from exc
 
     @sync_action("search_locations")
@@ -236,7 +236,7 @@ class Component(ComponentBase):
             raise UserException("Enter a location query to search.")
         try:
             matches = self._client.search_locations(q)
-        except (AccuWeatherApiError, ValueError) as exc:
+        except AccuWeatherApiError as exc:
             raise UserException(f"Location search failed: {exc}") from exc
         elements = []
         for m in matches:
