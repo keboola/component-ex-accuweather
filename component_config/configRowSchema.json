@@ -233,6 +233,7 @@
           "type": "array",
           "title": "Indices Filter",
           "description": "Optional. Leave empty to output all indices, or pick specific ones to keep.",
+          "format": "select",
           "propertyOrder": 110,
           "uniqueItems": true,
           "items": {
