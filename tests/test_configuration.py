@@ -55,6 +55,28 @@ def test_search_requires_query_or_key():
         cfg.validate_location()
 
 
+def test_indices_ids_accepts_ui_labels():
+    # The multi-select UI can persist the label ("Name (id)"); the model normalizes to the int.
+    cfg = Configuration(
+        **{
+            "#api_key": "KEY",
+            "location_search": "Prague",
+            "datasets": {"indices": True, "indices_ids": ["Carwashing Forecast (51)", "UV Index (-15)"]},
+        }
+    )
+    assert cfg.datasets.indices_ids == [51, -15]
+
+
+def test_indices_ids_accepts_ints_and_numeric_strings():
+    cfg = Configuration(**{"#api_key": "KEY", "datasets": {"indices_ids": [26, "5", "-10"]}})
+    assert cfg.datasets.indices_ids == [26, 5, -10]
+
+
+def test_indices_ids_rejects_unparseable_value():
+    with pytest.raises(UserException):
+        Configuration(**{"#api_key": "KEY", "datasets": {"indices_ids": ["not an index"]}})
+
+
 def test_search_ok_with_query():
     cfg = Configuration(**{"#api_key": "KEY", "location_type": "search", "location_search": "Prague"})
     cfg.validate_location()  # must not raise

@@ -1,7 +1,9 @@
+import re
 from enum import IntEnum, StrEnum
+from typing import Any
 
 from keboola.component.exceptions import UserException
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
 
 class Units(StrEnum):
@@ -53,6 +55,26 @@ class DatasetsConfig(BaseModel):
     indices: bool = False
     indices_range: DailyRange = DailyRange.five
     indices_ids: list[int] | None = None
+
+    @field_validator("indices_ids", mode="before")
+    @classmethod
+    def _coerce_index_ids(cls, value: Any) -> Any:
+        """Normalize index ids to their integer values.
+
+        The config-UI multi-select can persist the human-readable label
+        (e.g. "Flu Forecast (26)") instead of the enum value; accept the label and
+        plain-string forms and reduce each to the AccuWeather index id, so a freshly
+        picked config and a legacy label-bearing one both validate as list[int].
+        """
+        if not isinstance(value, list):
+            return value
+        out: list[Any] = []
+        for item in value:
+            if isinstance(item, str):
+                match = re.search(r"\(\s*(-?\d+)\s*\)\s*$", item) or re.fullmatch(r"\s*(-?\d+)\s*", item)
+                item = int(match.group(1)) if match else item
+            out.append(item)
+        return out
 
     @property
     def any_selected(self) -> bool:
