@@ -1,0 +1,18 @@
+{
+  "exit_code": null,
+  "stderr": "",
+  "logs": [
+    {
+      "level": "INFO",
+      "logger": "root",
+      "message": "Using confirmed locationKey 125594",
+      "timestamp": "2026-07-13T10:48:18.000Z"
+    },
+    {
+      "level": "INFO",
+      "logger": "root",
+      "message": "Wrote 285 rows to indices",
+      "timestamp": "2026-07-13T10:48:18.000Z"
+    }
+  ]
+}

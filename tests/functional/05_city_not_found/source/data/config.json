@@ -1,0 +1,11 @@
+{
+  "action": "run",
+  "parameters": {
+    "#api_key": "DUMMY_KEY",
+    "location_type": "search",
+    "location_search": "Zzxqwmvbnq123nowhere",
+    "datasets": {
+      "current_conditions": true
+    }
+  }
+}

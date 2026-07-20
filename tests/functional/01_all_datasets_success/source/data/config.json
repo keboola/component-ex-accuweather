@@ -1,0 +1,20 @@
+{
+  "action": "run",
+  "parameters": {
+    "#api_key": "DUMMY_KEY",
+    "units": "metric",
+    "language": "en-us",
+    "location_type": "search",
+    "location_search": "Prague",
+    "datasets": {
+      "current_conditions": true,
+      "current_conditions_details": true,
+      "daily_forecast": true,
+      "daily_range": 5,
+      "daily_forecast_details": true,
+      "hourly_forecast": true,
+      "hourly_range": 12,
+      "hourly_forecast_details": true
+    }
+  }
+}

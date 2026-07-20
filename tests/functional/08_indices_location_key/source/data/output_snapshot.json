@@ -1,0 +1,29 @@
+{
+  "files": {},
+  "hash_algorithm": "sha256",
+  "tables": {
+    "indices.csv": {
+      "columns": [
+        "125594",
+        "-15",
+        "UV Index",
+        "2026-07-13T07:00:00+02:00",
+        "7.0",
+        "Very High",
+        "4",
+        "",
+        "False"
+      ],
+      "hash": "sha256:227f2489a5a8219dcea2897494067532a35b760ad101bf12604c874cde88fcbf",
+      "row_count": 285,
+      "size_bytes": 22218
+    },
+    "indices.csv.manifest": {
+      "columns": null,
+      "hash": "sha256:536beb0d54cf4e9a12181c14e62e54b69a7881e4096d35175f2efb071da3c20f",
+      "row_count": null,
+      "size_bytes": 1500
+    }
+  },
+  "version": "1.0"
+}

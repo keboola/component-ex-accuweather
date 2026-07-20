@@ -1,0 +1,8 @@
+{
+  "action": "search_locations",
+  "parameters": {
+    "#api_key": "DUMMY_KEY",
+    "location_type": "search",
+    "location_search": "Prague"
+  }
+}

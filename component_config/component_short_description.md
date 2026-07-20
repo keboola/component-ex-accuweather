@@ -1,1 +1,1 @@
-Enter short description of the component here.
+Extracts current conditions and daily and hourly forecasts from AccuWeather.

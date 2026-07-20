@@ -1,0 +1,42 @@
+{
+  "files": {},
+  "hash_algorithm": "sha256",
+  "tables": {
+    "current_conditions.csv": {
+      "columns": [
+        "125594",
+        "2026-07-09T16:21:00+02:00",
+        "1783606860",
+        "Sunny",
+        "1",
+        "False",
+        "",
+        "True",
+        "24.0",
+        "C",
+        "24.2",
+        "33",
+        "17.9",
+        "315",
+        "NW",
+        "3",
+        "Moderate",
+        "46.7",
+        "1",
+        "1015.0",
+        "http://www.accuweather.com/en/cz/prague/125594/current-weather/125594?lang=en-us",
+        "http://www.accuweather.com/en/cz/prague/125594/current-weather/125594?lang=en-us"
+      ],
+      "hash": "sha256:adb7b90ce8003a1e3dd4b25b5bfccfb4d8ec8b313a550b96262c11d323619840",
+      "row_count": 1,
+      "size_bytes": 279
+    },
+    "current_conditions.csv.manifest": {
+      "columns": null,
+      "hash": "sha256:94e80d023d81339679e478f34c7bc0a0efc45d330a0e0408193c5c71097ffbc0",
+      "row_count": null,
+      "size_bytes": 3526
+    }
+  },
+  "version": "1.0"
+}

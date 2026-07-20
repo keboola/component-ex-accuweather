@@ -1,21 +1,23 @@
 {
-  "storage": {
-    "input": {
-      "files": [],
-      "tables": [
-        {
-          "source": "in.c-example.example",
-          "destination": "example.csv"
-        }
-      ]
-    },
-    "output": {
-      "files": [],
-      "tables": []
+  "parameters": {
+    "#api_key": "YOUR_ACCUWEATHER_API_KEY",
+    "units": "metric",
+    "language": "en-us",
+    "location_type": "search",
+    "location_search": "Prague",
+    "datasets": {
+      "current_conditions": true,
+      "current_conditions_details": true,
+      "daily_forecast": true,
+      "daily_range": 5,
+      "daily_forecast_details": false,
+      "hourly_forecast": true,
+      "hourly_range": 12,
+      "hourly_forecast_details": false,
+      "indices": true,
+      "indices_range": 5,
+      "indices_ids": []
     }
   },
-  "parameters": {
-    "#api_token": "your-secret-token",
-    "debug": false
-  }
+  "action": "run"
 }

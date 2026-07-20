@@ -1,0 +1,30 @@
+{
+  "exit_code": null,
+  "stderr": "",
+  "logs": [
+    {
+      "level": "INFO",
+      "logger": "root",
+      "message": "Loading state file..",
+      "timestamp": "2026-07-09T12:00:00.000Z"
+    },
+    {
+      "level": "INFO",
+      "logger": "root",
+      "message": "Wrote 1 rows to current_conditions",
+      "timestamp": "2026-07-09T12:00:00.000Z"
+    },
+    {
+      "level": "INFO",
+      "logger": "root",
+      "message": "Wrote 5 rows to daily_forecast",
+      "timestamp": "2026-07-09T12:00:00.000Z"
+    },
+    {
+      "level": "INFO",
+      "logger": "root",
+      "message": "Wrote 12 rows to hourly_forecast",
+      "timestamp": "2026-07-09T12:00:00.000Z"
+    }
+  ]
+}
